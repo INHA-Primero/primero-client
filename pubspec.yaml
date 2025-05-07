@@ -34,6 +34,8 @@ dependencies:
   # The following adds the Cupertino Icons font to your application.
   # Use with the CupertinoIcons class for iOS style icons.
   cupertino_icons: ^1.0.8
+  go_router: ^15.1.1
+  font_awesome_flutter: ^10.4.0
 
 dev_dependencies:
   flutter_test:
@@ -87,3 +89,18 @@ flutter:
   #
   # For details regarding fonts from package dependencies,
   # see https://flutter.dev/to/font-from-package
+
+  assets:
+    - assets/images/babyTree2.png
+
+  fonts:
+    - family: RedHatDisplay
+      fonts:
+        - asset: assets/fonts/RedHatDisplay-Regular.ttf
+          weight: 400
+        - asset: assets/fonts/RedHatDisplay-Medium.ttf
+          weight: 500
+        - asset: assets/fonts/RedHatDisplay-SemiBold.ttf
+          weight: 600
+        - asset: assets/fonts/RedHatDisplay-Bold.ttf
+          weight: 700
