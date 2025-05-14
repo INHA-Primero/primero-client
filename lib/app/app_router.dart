@@ -5,7 +5,7 @@ import 'package:primero/core/widgets/main_scaffold.dart';
 import 'package:primero/features/onboarding/onboarding_screen.dart';
 import 'package:primero/features/home/home_screen.dart';
 import 'package:primero/features/scan/scan_screen.dart';
-import 'package:primero/features/profile/profile_screen.dart';
+import 'package:primero/features/profile/presentation/screeens/profile_screen.dart';
 
 final appRouter = GoRouter(
   initialLocation: '/',
