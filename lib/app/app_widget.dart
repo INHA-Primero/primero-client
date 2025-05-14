@@ -40,8 +40,8 @@
 //   }
 // }
 import 'package:flutter/material.dart';
-import 'routes/app_router.dart'; // 위에서 만든 라우터
-import 'core/theme/app_colors.dart';
+import 'app_router.dart'; // 위에서 만든 라우터
+import '../core/theme/app_colors.dart';
 
 class MyApp extends StatelessWidget {
   const MyApp({super.key});
