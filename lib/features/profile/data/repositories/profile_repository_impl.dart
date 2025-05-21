@@ -1,6 +1,6 @@
 // lib/features/profile/data/repositories/profile_repository_impl.dart
-
-import 'package:primero/features/profile/data/models/user_profile_model.dart';
+import 'dart:io'; // File 사용을 위해 추가
+// import 'package:primero/features/profile/data/models/user_profile_model.dart'; // 이미 상단에 ProfileRemoteDataSource에서 import 되었으므로 중복 불필요
 import 'package:primero/features/profile/data/sources/remote/profile_remote_data_source.dart';
 import 'package:primero/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:primero/features/profile/domain/repositories/profile_repository.dart';
@@ -25,22 +25,18 @@ class ProfileRepositoryImpl implements ProfileRepository {
   Future<UserProfileEntity> updateUserProfile({
     String? nickname,
     String? profileImageUrl,
-    // password는 여기서 받지 않음. changePassword 메서드로 분리.
   }) async {
     final Map<String, dynamic> dataToUpdate = {};
-    if (nickname != null) dataToUpdate['nickname'] = nickname;
-    if (profileImageUrl != null)
-      dataToUpdate['profileImageUrl'] = profileImageUrl;
-    // profileImageUrl을 null로 설정하고 싶다면, API 명세에 따라 명시적으로 null을 보내야 할 수 있습니다.
-    // 예: dataToUpdate['profileImageUrl'] = null; (값이 null이 아니거나, 명시적으로 null로 업데이트할 때)
+    bool hasChanges = false;
 
-    // 변경할 내용이 없는 경우에 대한 처리는 UseCase나 Notifier에서 하는 것이 더 적절할 수 있습니다.
-    // 현재는 remoteDataSource.updateUserProfile이 빈 Map도 처리한다고 가정합니다.
-    if (dataToUpdate.isEmpty && profileImageUrl == null) {
-      // 명시적으로 null로 업데이트하는 경우도 고려
-      // 이 경우 API를 호출하지 않거나, 현재 정보를 반환할 수 있습니다.
-      // 여기서는 API 호출로 넘깁니다.
+    if (nickname != null) {
+      dataToUpdate['nickname'] = nickname;
+      hasChanges = true;
     }
+    // profileImageUrl은 명시적으로 null이 전달될 수도 있고, URL 문자열이 전달될 수도 있음.
+    // 서버 API가 이를 적절히 처리한다고 가정.
+    // profileImageUrl 필드 자체를 보내야 변경/삭제/유지 여부를 서버가 판단 가능.
+    dataToUpdate['profileImageUrl'] = profileImageUrl;
 
     try {
       final updatedUserProfileModel = await remoteDataSource.updateUserProfile(
@@ -58,6 +54,7 @@ class ProfileRepositoryImpl implements ProfileRepository {
     required String currentPassword,
     required String newPassword,
   }) async {
+    // 기존 구현과 동일
     try {
       await remoteDataSource.changePassword({
         'currentPassword': currentPassword,
@@ -66,6 +63,18 @@ class ProfileRepositoryImpl implements ProfileRepository {
     } catch (e) {
       print('Error in ProfileRepositoryImpl.changePassword: $e');
       throw Exception('비밀번호 변경에 실패했습니다. ($e)');
+    }
+  }
+
+  @override
+  Future<String> uploadProfileImage(File imageFile) async {
+    try {
+      // 데이터 소스 레이어에 이미지 업로드 요청 위임
+      return await remoteDataSource.uploadProfileImage(imageFile);
+    } catch (e) {
+      print('Error in ProfileRepositoryImpl.uploadProfileImage: $e');
+      // 여기서 에러를 좀 더 가공하거나, 특정 타입의 에러로 변환하여 상위 레이어로 전달할 수 있습니다.
+      throw Exception('이미지 업로드에 실패했습니다. ($e)');
     }
   }
 }

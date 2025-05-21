@@ -1,29 +1,32 @@
 // lib/features/profile/presentation/screens/profile_screen.dart
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:primero/core/theme/app_colors.dart'; // AppColors 사용
-import 'package:primero/core/theme/app_text_style.dart'; // AppTextStyle 사용
+import 'package:primero/core/theme/app_colors.dart';
+import 'package:primero/core/theme/app_text_style.dart';
 import 'package:primero/features/profile/domain/entities/user_profile_entity.dart';
 import 'package:primero/features/profile/presentation/providers/profile_di.dart';
 import 'package:primero/features/profile/presentation/providers/profile_state.dart';
 import 'package:go_router/go_router.dart';
-// 수정된 라우터 파일 경로
 import 'package:primero/app/app_router.dart'; // AppRouteNames 사용
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
 
   // 기본 프로필 이미지 경로 (assets 폴더에 해당 파일이 있어야 함)
+  // 사용자님이 제공해주신 코드의 경로를 사용합니다.
   static const String defaultProfileAssetPath =
-      'assets/images/babyTree2.png'; // 실제 경로 확인
+      'assets/images/defaultProfileImage.png';
 
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(profileNotifierProvider);
     final profileNotifier = ref.read(profileNotifierProvider.notifier);
 
-    // Hex Color F3F4F5
-    const Color cardAndDividerColor = Color(0xFFF3F4F5);
+    const Color cardAndDividerColor = Color(0xFFF3F4F5); // 히스토리 카드 및 구분선 색상
+    // 프로필 카드 내 텍스트 색상은 AppTextStyle의 기본값을 따르거나,
+    // 피그마 디자인에 더 가깝게 하려면 여기서 명시적으로 정의할 수 있습니다.
+    // 예: const Color profileNameColor = Colors.black87;
+    // 예: const Color profileSubTextColor = Colors.black54;
 
     void showMenuComingSoonSnackBar() {
       ScaffoldMessenger.of(
@@ -36,31 +39,32 @@ class ProfileScreen extends ConsumerWidget {
     }
 
     return Scaffold(
-      backgroundColor: Colors.white, // 1. 전체 화면 배경 흰색
+      backgroundColor: Colors.white, // 전체 화면 배경 흰색
       appBar: AppBar(
+        automaticallyImplyLeading: false,
         title: Text(
           // 1. AppBar 타이틀
           '나의 프로필',
           style: AppTextStyle.bold.copyWith(
-            fontSize: 24,
+            fontSize: 22,
             color: Colors.black87,
-          ), // 더 굵게, 크기 조절
+          ),
         ),
-        centerTitle: false, // 타이틀 왼쪽 정렬 (기본값은 플랫폼에 따라 다를 수 있음)
-        titleSpacing: 20.0, // 왼쪽 패딩 조절 (기본값은 NavigationToolbar.kMiddleSpacing)
-        toolbarHeight: 60.0, // AppBar 높이 약간 아래로 내리는 효과 (기본값 56.0)
+        centerTitle: false,
+        titleSpacing: 20.0, // 1. 원하는 왼쪽 여백 설정
+        toolbarHeight: 70.0, // AppBar 높이
         backgroundColor: Colors.white,
         elevation: 0,
         scrolledUnderElevation: 0,
         actions: [
           Padding(
-            padding: const EdgeInsets.only(right: 8.0), // 아이콘 오른쪽 여백
+            padding: const EdgeInsets.only(right: 12.0),
             child: IconButton(
               icon: const Icon(
                 Icons.menu_rounded,
-                color: Colors.black54,
+                color: Colors.black,
                 size: 28,
-              ), // 채워진 메뉴 아이콘, 크기 및 색상 조절
+              ), // 아이콘 색상 및 크기
               onPressed: showMenuComingSoonSnackBar,
               tooltip: '메뉴',
             ),
@@ -73,21 +77,24 @@ class ProfileScreen extends ConsumerWidget {
         },
         color: AppColors.primary,
         child: ListView(
-          padding: const EdgeInsets.all(0),
+          padding: const EdgeInsets.symmetric(
+            horizontal: 16.0,
+            vertical: 16.0,
+          ), // ListView 전체에 좌우 패딩
           children: <Widget>[
             if (profileState is ProfileInitial ||
                 (profileState is ProfileLoading &&
-                    !(profileState is ProfileInfoUpdating ||
+                    !(profileState is ProfileFullUpdating ||
                         profileState is PasswordChangeLoading)))
               _buildLoadingIndicator()
             else if (profileState is ProfileLoaded)
               _buildProfileCard(
                 context,
                 profileState.userProfile,
-                (profileState is ProfileInfoUpdating ||
+                (profileState is ProfileFullUpdating ||
                     profileState is PasswordChangeLoading),
                 navigateToEditScreen,
-                cardAndDividerColor,
+                cardAndDividerColor, // 카드 배경색으로 사용할 색상 전달
               )
             else if (profileState is ProfileError)
               _buildErrorView(
@@ -106,23 +113,18 @@ class ProfileScreen extends ConsumerWidget {
                 ),
               ),
 
-            // 6. 인증 기록으로 넘어가는 구분선
             Padding(
-              padding: const EdgeInsets.symmetric(
-                horizontal: 16.0,
-                vertical: 20.0,
-              ), // 구분선 위아래 여백 증가
+              padding: const EdgeInsets.symmetric(vertical: 24.0),
               child: Divider(
                 height: 1,
                 thickness: 1,
                 color: cardAndDividerColor,
-              ), // 요청하신 색상으로 변경
+              ), // 구분선 색상
             ),
             const Padding(
-              padding: EdgeInsets.fromLTRB(20.0, 0, 16.0, 12.0), // 제목 왼쪽 패딩 증가
+              padding: EdgeInsets.only(bottom: 16.0), // 인증 기록 타이틀 아래 여백
               child: Text('인증 기록', style: AppTextStyle.bold),
             ),
-            // TODO: 실제 인증 기록 리스트 구현
             _buildHistoryItem(
               context,
               date: '2025/04/30',
@@ -144,21 +146,7 @@ class ProfileScreen extends ConsumerWidget {
               success: true,
               cardColor: cardAndDividerColor,
             ),
-            // 더 많은 히스토리 아이템 예시 (스크롤 확인용)
-            _buildHistoryItem(
-              context,
-              date: '2025/04/25',
-              place: '2호관 앞',
-              success: true,
-              cardColor: cardAndDividerColor,
-            ),
-            _buildHistoryItem(
-              context,
-              date: '2025/04/23',
-              place: '학생회관',
-              success: false,
-              cardColor: cardAndDividerColor,
-            ),
+            const SizedBox(height: 20),
           ],
         ),
       ),
@@ -233,129 +221,157 @@ class ProfileScreen extends ConsumerWidget {
     UserProfileEntity profile,
     bool isOverallUpdating,
     Function(UserProfileEntity) onCardTap,
-    Color cardBackgroundColor,
+    Color cardBackgroundColor, // 히스토리 카드와 동일한 배경색을 받도록 함
   ) {
     ImageProvider profileImageProvider;
+    bool isNetworkImage = false;
+
     if (profile.profileImageUrl != null &&
         profile.profileImageUrl!.isNotEmpty &&
         (profile.profileImageUrl!.startsWith('http://') ||
             profile.profileImageUrl!.startsWith('https://'))) {
       profileImageProvider = NetworkImage(profile.profileImageUrl!);
+      isNetworkImage = true;
     } else {
       profileImageProvider = const AssetImage(
         ProfileScreen.defaultProfileAssetPath,
       );
     }
 
-    // 3. 프로필 카드 내 텍스트 스타일
-    final TextStyle cardTextStyle = AppTextStyle.bold.copyWith(
-      fontSize: 16,
+    // 프로필 카드 내 텍스트 스타일
+    final TextStyle nameTextStyle = AppTextStyle.bold.copyWith(
+      fontSize: 17,
       color: Colors.black87,
     );
+    final TextStyle subTextStyle = AppTextStyle.bold.copyWith(
+      fontSize: 14,
+      color: Colors.black54,
+    );
 
-    return Padding(
-      padding: const EdgeInsets.fromLTRB(
-        16.0,
-        8.0,
-        16.0,
-        8.0,
-      ), // AppBar와 카드 사이 간격 조절
+    // *** 프로필 이미지 크기 변경 (예: 80x80) ***
+    const double profileImageSize = 80.0;
+
+    return Card(
+      margin: const EdgeInsets.only(bottom: 16.0),
+      elevation: 0,
+      color: cardBackgroundColor, // 카드 자체의 배경은 회색 유지
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(10.0),
+        side: BorderSide(color: cardBackgroundColor, width: 1.0),
+      ),
       child: InkWell(
         onTap: () => onCardTap(profile),
-        borderRadius: BorderRadius.circular(16.0),
-        child: Card(
-          elevation: 0,
-          color: cardBackgroundColor, // 2. 프로필 카드 배경색 적용
-          shape: RoundedRectangleBorder(
-            borderRadius: BorderRadius.circular(16.0),
-          ),
-          child: Padding(
-            padding: const EdgeInsets.symmetric(
-              vertical: 20.0,
-              horizontal: 20.0,
-            ),
-            child: Stack(
-              // Stack을 사용하여 아이콘을 오른쪽 상단에 배치
-              alignment: Alignment.center, // 기본 정렬
-              children: [
-                Row(
-                  crossAxisAlignment: CrossAxisAlignment.center,
-                  children: [
-                    CircleAvatar(
-                      radius: 32,
-                      backgroundColor: Colors.white,
-                      backgroundImage: profileImageProvider,
-                      onBackgroundImageError: (_, __) {
-                        print(
-                          "ProfileScreen: Failed to load network image for profile card.",
-                        );
-                      },
-                    ),
-                    const SizedBox(width: 16),
-                    Expanded(
-                      child: Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
-                        mainAxisAlignment: MainAxisAlignment.center,
-                        children: [
-                          Text(
-                            profile.name,
-                            style: cardTextStyle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            '포인트: ${profile.totalPoint}p',
-                            style: cardTextStyle,
-                          ),
-                          const SizedBox(height: 5),
-                          Text(
-                            '나무 이름: ${profile.nickname}',
-                            style: cardTextStyle,
-                            maxLines: 1,
-                            overflow: TextOverflow.ellipsis,
-                          ),
-                        ],
-                      ),
-                    ),
-                    // 4. 네비게이션 아이콘은 Row의 일부로 두어 수직 중앙 정렬 유지
-                    // Icon(Icons.arrow_forward_ios_rounded, color: Colors.grey[500], size: 20),
-                  ],
-                ),
-                // 4. 프로필 변경 화면으로 들어가는 아이콘을 오른쪽 상단에 위치
-                Positioned(
-                  top: 0,
-                  right: 0,
-                  child: Icon(
-                    Icons.arrow_forward_ios_rounded,
-                    color: Colors.grey[600],
-                    size: 22,
-                  ), // 아이콘 색상 및 크기 조절
-                ),
-                if (isOverallUpdating)
-                  Positioned.fill(
-                    child: Container(
-                      decoration: BoxDecoration(
-                        // 카드 배경색과 유사하게 하되 약간의 투명도
-                        color: cardBackgroundColor.withOpacity(0.8),
-                        borderRadius: BorderRadius.circular(12.0),
-                      ),
-                      child: const Center(
-                        child: CircularProgressIndicator(
-                          color: AppColors.primary,
+        borderRadius: BorderRadius.circular(10.0),
+        child: Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Stack(
+            children: [
+              Row(
+                crossAxisAlignment: CrossAxisAlignment.center,
+                children: [
+                  SizedBox(
+                    // *** 변경된 부분: 프로필 이미지 컨테이너 크기 조절 ***
+                    width: profileImageSize,
+                    height: profileImageSize,
+                    child: ClipOval(
+                      child: Container(
+                        color: Colors.white, // 이미지 영역 배경을 흰색으로 설정
+                        child: Image(
+                          image: profileImageProvider,
+                          // *** 변경된 부분: BoxFit.cover -> BoxFit.contain ***
+                          fit: BoxFit.contain, // 이미지가 잘리지 않도록 변경
+                          // *** 변경된 부분: Image 위젯 크기도 조절 ***
+                          width: profileImageSize,
+                          height: profileImageSize,
+                          errorBuilder: (context, error, stackTrace) {
+                            if (isNetworkImage) {
+                              print(
+                                "ProfileScreen: Failed to load network image. Using default. Error: $error",
+                              );
+                              return Image.asset(
+                                ProfileScreen.defaultProfileAssetPath,
+                                fit: BoxFit.contain, // 에러 시에도 contain 유지
+                                // *** 변경된 부분: 에러 시 기본 이미지 크기도 조절 ***
+                                width: profileImageSize,
+                                height: profileImageSize,
+                              );
+                            }
+                            return Container(
+                              // *** 변경된 부분: 에러 시 아이콘 컨테이너 크기도 조절 ***
+                              width: profileImageSize,
+                              height: profileImageSize,
+                              alignment: Alignment.center,
+                              child: Icon(
+                                Icons.person,
+                                // *** 변경된 부분: 아이콘 크기도 비율에 맞게 조절 (선택 사항) ***
+                                size: profileImageSize * 0.6,
+                                color: Colors.grey,
+                              ),
+                            );
+                          },
                         ),
                       ),
                     ),
                   ),
-              ],
-            ),
+                  const SizedBox(width: 16),
+                  Expanded(
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                        Text(
+                          "이름: ${profile.name}",
+                          style: nameTextStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '포인트: ${profile.totalPoint}p',
+                          style: subTextStyle,
+                        ),
+                        const SizedBox(height: 6),
+                        Text(
+                          '나무 이름: ${profile.nickname}',
+                          style: subTextStyle,
+                          maxLines: 1,
+                          overflow: TextOverflow.ellipsis,
+                        ),
+                      ],
+                    ),
+                  ),
+                ],
+              ),
+              Positioned(
+                top: 0,
+                right: 0,
+                child: Icon(
+                  Icons.arrow_forward_ios_rounded,
+                  color: Colors.grey[400],
+                  size: 18,
+                ),
+              ),
+              if (isOverallUpdating)
+                Positioned.fill(
+                  child: Container(
+                    decoration: BoxDecoration(
+                      color: cardBackgroundColor.withOpacity(0.8),
+                      borderRadius: BorderRadius.circular(10.0),
+                    ),
+                    child: const Center(
+                      child: CircularProgressIndicator(
+                        color: AppColors.primary,
+                      ),
+                    ),
+                  ),
+                ),
+            ],
           ),
         ),
       ),
     );
   }
 
-  // 6. 인증 기록 블록들 색상 및 스타일 적용
   Widget _buildHistoryItem(
     BuildContext context, {
     required String date,
@@ -363,44 +379,35 @@ class ProfileScreen extends ConsumerWidget {
     required bool success,
     required Color cardColor,
   }) {
+    final TextStyle historyTitleStyle = AppTextStyle.medium.copyWith(
+      fontSize: 14,
+      color: Colors.black87,
+    );
+    final TextStyle historySubTitleStyle = AppTextStyle.regular.copyWith(
+      fontSize: 12,
+      color: Colors.grey[700],
+    );
+
     return Padding(
-      padding: const EdgeInsets.symmetric(
-        horizontal: 16.0,
-        vertical: 5.0,
-      ), // 아이템 간 간격
+      padding: const EdgeInsets.symmetric(vertical: 4.0),
       child: Card(
         elevation: 0,
-        color: cardColor, // 2. 인증 기록 카드 배경색 적용
+        color: cardColor,
         shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(10.0),
+          borderRadius: BorderRadius.circular(12.0),
         ),
         child: ListTile(
           leading: Icon(
-            // 5. 아이콘 굵기/스타일
-            success
-                ? Icons.check_circle_rounded
-                : Icons.cancel_rounded, // 채워진 아이콘
+            success ? Icons.check_circle_rounded : Icons.cancel_rounded,
             color: success ? AppColors.primary : Colors.redAccent,
-            size: 28, // 아이콘 크기 조절
+            size: 28,
           ),
-          title: Text(
-            '날짜: $date',
-            style: AppTextStyle.medium.copyWith(
-              fontSize: 13,
-              color: Colors.black87,
-            ),
-          ), // 폰트 크기 약간 줄임
-          subtitle: Text(
-            '장소: $place',
-            style: AppTextStyle.regular.copyWith(
-              fontSize: 11,
-              color: Colors.grey[700],
-            ),
-          ), // 폰트 크기 약간 줄임
+          title: Text('날짜: $date', style: historyTitleStyle),
+          subtitle: Text('장소: $place', style: historySubTitleStyle),
           trailing: Icon(
             Icons.arrow_forward_ios_rounded,
             size: 16,
-            color: Colors.grey[500],
+            color: Colors.grey[400],
           ),
           onTap: () {
             ScaffoldMessenger.of(
@@ -410,8 +417,7 @@ class ProfileScreen extends ConsumerWidget {
           contentPadding: const EdgeInsets.symmetric(
             vertical: 6.0,
             horizontal: 16.0,
-          ), // 내부 패딩 조절
-          dense: true, // ListTile을 좀 더 컴팩트하게
+          ),
         ),
       ),
     );
