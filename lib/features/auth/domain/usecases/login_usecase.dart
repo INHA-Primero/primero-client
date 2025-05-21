@@ -11,16 +11,20 @@ class LoginUseCase {
     required String email,
     required String password,
   }) async {
+    // UseCase에서 직접 deviceUuid를 가져와서 Repository에 전달
     final deviceUuid = await repository.getDeviceUuid();
     if (deviceUuid == null) {
-      throw Exception('기기 ID를 가져올 수 없습니다. 앱을 재시작하거나 지원팀에 문의하세요.');
+      throw Exception('기기 ID를 생성하거나 가져올 수 없습니다.');
     }
-    return await repository.login(
-      LoginRequestModel(
-        email: email,
-        password: password,
-        deviceUuid: deviceUuid,
-      ),
+
+    final requestModel = LoginRequestModel(
+      // 모델 생성 시 deviceUuid 제외
+      email: email,
+      password: password,
     );
+    return await repository.login(
+      requestModel,
+      deviceUuid,
+    ); // deviceUuid를 별도 전달
   }
 }

@@ -6,11 +6,11 @@ import 'package:primero/features/auth/data/models/email_verification_request_mod
 import 'package:primero/features/auth/data/models/login_request_model.dart';
 import 'package:primero/features/auth/data/models/signup_request_model.dart';
 
-// TODO: 실제 API 서버의 기본 URL로 변경해야 합니다.
-const String _authApiBaseUrl =
-    "https://88a37a13-b991-4107-9315-5afcefdf6af3.mock.pstmn.io/auth"; // 인증 관련 기본 경로 예시
-const String _userApiBaseUrl =
-    "https://88a37a13-b991-4107-9315-5afcefdf6af3.mock.pstmn.io"; // 사용자 관련 기본 경로 예시 (signup)
+// API 기본 경로: 백엔드 UserController의 @RequestMapping("/api/users") 및
+// 다른 AuthController가 /api/auth 등을 사용한다고 가정합니다.
+// 실제 배포 시에는 환경에 맞는 URL로 변경해야 합니다.
+const String _apiBaseUrl =
+    "https://88a37a13-b991-4107-9315-5afcefdf6af3.mock.pstmn.io/api";
 
 abstract class AuthRemoteDataSource {
   Future<void> requestEmailVerification(
@@ -22,9 +22,14 @@ abstract class AuthRemoteDataSource {
   Future<void> verifyEmailCode(
     EmailVerificationConfirmRequestModel requestModel,
   );
-  Future<AuthResponseModel> signup(SignupRequestModel requestModel);
-  Future<AuthResponseModel> login(LoginRequestModel requestModel);
-  // Future<void> logout(); // 서버 측 토큰 무효화 API가 있다면 추가
+  Future<AuthResponseModel> signup(
+    SignupRequestModel requestModel,
+    String deviceUuid,
+  );
+  Future<AuthResponseModel> login(
+    LoginRequestModel requestModel,
+    String deviceUuid,
+  );
 }
 
 class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
@@ -32,24 +37,45 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
 
   AuthRemoteDataSourceImpl({required Dio dio}) : _dio = dio;
 
-  /// API 호출을 위한 공통 헬퍼 메서드 (에러 처리 포함)
+  // 공통 API 호출 핸들러 (내용은 이전과 유사)
   Future<T> _handleApiCall<T>(
     Future<Response<dynamic>> Function() apiCall,
     T Function(dynamic data) onSuccess, {
-    String? operationName, // 로깅이나 에러 메시지에 사용할 작업 이름
+    String? operationName,
   }) async {
     final opName = operationName ?? 'API 작업';
     try {
       final response = await apiCall();
-      // API 명세에 따라 성공 상태 코드가 다를 수 있음 (200, 201 등)
       if (response.statusCode == 200 || response.statusCode == 201) {
-        // 성공 응답 본문이 없는 경우 (예: void 반환 API)도 고려
         if (response.data == null && null is T) {
+          // void 반환 API 처리
           return null as T;
         }
-        return onSuccess(response.data);
+        // 회원가입 응답이 Long(userId)만 오는 경우에 대한 임시 처리
+        if (opName == '회원가입' &&
+            response.data is int &&
+            T == AuthResponseModel) {
+          print(
+            "Warning: Signup API returned only userId ($response.data). Constructing partial AuthResponseModel. Backend should return full AuthResponseModel including tokens.",
+          );
+          // !!! 백엔드에서 AuthResponseModel과 일치하는 JSON(토큰 포함)을 반환하도록 수정하는 것이 최선입니다 !!!
+          return AuthResponseModel(
+                userId: response.data as int,
+                barcodeUrl: "TEMP_BARCODE_URL_SIGNUP",
+                accessToken: null,
+                refreshToken: null,
+              )
+              as T;
+        }
+        // 로그인 및 기타 정상적인 JSON 응답 처리
+        if (response.data is Map<String, dynamic>) {
+          return onSuccess(response.data);
+        }
+        // 예상치 못한 응답 형식
+        throw Exception(
+          "$opName 응답 형식이 예상과 다릅니다: ${response.data?.runtimeType}, data: ${response.data}",
+        );
       } else {
-        // 서버에서 정의된 에러 메시지가 있다면 그것을 사용
         final errorMessage =
             response.data?['message'] ??
             '$opName 실패: 상태 코드 ${response.statusCode}';
@@ -77,9 +103,10 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
   Future<void> requestEmailVerification(
     EmailVerificationRequestModel requestModel,
   ) async {
+    // 이메일 인증 API가 /api/auth/email 경로를 사용한다고 가정
     return _handleApiCall<void>(
-      () => _dio.post('$_authApiBaseUrl/email', data: requestModel.toJson()),
-      (_) {}, // 성공 시 반환값 없음 (void)
+      () => _dio.post('$_apiBaseUrl/auth/email', data: requestModel.toJson()),
+      (_) {},
       operationName: '이메일 인증 요청',
     );
   }
@@ -89,7 +116,7 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     EmailVerificationRequestModel requestModel,
   ) async {
     return _handleApiCall<void>(
-      () => _dio.post('$_authApiBaseUrl/resend', data: requestModel.toJson()),
+      () => _dio.post('$_apiBaseUrl/auth/resend', data: requestModel.toJson()),
       (_) {},
       operationName: '이메일 인증번호 재전송',
     );
@@ -100,39 +127,62 @@ class AuthRemoteDataSourceImpl implements AuthRemoteDataSource {
     EmailVerificationConfirmRequestModel requestModel,
   ) async {
     return _handleApiCall<void>(
-      () => _dio.post('$_authApiBaseUrl/verify', data: requestModel.toJson()),
+      () => _dio.post('$_apiBaseUrl/auth/verify', data: requestModel.toJson()),
       (_) {},
       operationName: '이메일 인증번호 확인',
     );
   }
 
   @override
-  Future<AuthResponseModel> signup(SignupRequestModel requestModel) async {
-    // API 명세의 회원가입 경로는 /signup 이므로 _userApiBaseUrl 사용 (백엔드와 일치시켜야 함)
+  Future<AuthResponseModel> signup(
+    SignupRequestModel requestModel,
+    String deviceUuid,
+  ) async {
+    // 백엔드 UserController의 경로가 /api/users/signup 이므로, 이를 따름
+    // deviceUuid는 X-DEVICE-UUID 헤더로 전송
     return _handleApiCall<AuthResponseModel>(
-      () => _dio.post('$_userApiBaseUrl/signup', data: requestModel.toJson()),
-      (data) => AuthResponseModel.fromJson(data as Map<String, dynamic>),
+      () => _dio.post(
+        '$_apiBaseUrl/users/signup', // 경로 수정
+        data: requestModel.toJson(),
+        options: Options(headers: {'X-DEVICE-UUID': deviceUuid}), // 헤더 추가
+      ),
+      (data) {
+        // onSuccess 콜백
+        if (data is int) {
+          // 백엔드가 userId(Long)만 반환하는 경우
+          print(
+            "Signup API returned userId: $data. Creating temporary AuthResponseModel. Please ask backend to return full AuthResponseModel with tokens.",
+          );
+          return AuthResponseModel(
+            userId: data,
+            barcodeUrl: "TEMP_BARCODE_SIGNUP",
+            accessToken: null,
+            refreshToken: null,
+          );
+        } else if (data is Map<String, dynamic>) {
+          return AuthResponseModel.fromJson(data);
+        }
+        throw Exception("회원가입 응답 형식이 예상과 다릅니다: $data");
+      },
       operationName: '회원가입',
     );
   }
 
   @override
-  Future<AuthResponseModel> login(LoginRequestModel requestModel) async {
-    // API 명세의 로그인 경로는 /login 이므로 _userApiBaseUrl 사용 (백엔드와 일치시켜야 함)
+  Future<AuthResponseModel> login(
+    LoginRequestModel requestModel,
+    String deviceUuid,
+  ) async {
+    // 로그인 API 경로도 /api/users/login 이고, deviceUuid를 헤더로 받는다고 가정 (백엔드 확인 필요)
+    // 만약 AuthController에 있다면 /api/auth/login 등으로 변경
     return _handleApiCall<AuthResponseModel>(
-      () => _dio.post('$_userApiBaseUrl/login', data: requestModel.toJson()),
+      () => _dio.post(
+        '$_apiBaseUrl/users/login', // 경로 예시 (백엔드 확인 필요)
+        data: requestModel.toJson(),
+        options: Options(headers: {'X-DEVICE-UUID': deviceUuid}), // 헤더 추가
+      ),
       (data) => AuthResponseModel.fromJson(data as Map<String, dynamic>),
       operationName: '로그인',
     );
   }
-
-  // 예시: 로그아웃 API가 있다면
-  // @override
-  // Future<void> logout() async {
-  //   return _handleApiCall<void>(
-  //     () => _dio.post('$_authApiBaseUrl/logout'), // 실제 로그아웃 API 경로
-  //     (_) {},
-  //     operationName: '로그아웃',
-  //   );
-  // }
 }

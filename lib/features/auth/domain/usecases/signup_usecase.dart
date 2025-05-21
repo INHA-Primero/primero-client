@@ -1,3 +1,4 @@
+// lib/features/auth/domain/usecases/signup_usecase.dart
 import 'package:primero/features/auth/data/models/signup_request_model.dart';
 import 'package:primero/features/auth/domain/entities/auth_response_entity.dart';
 import 'package:primero/features/auth/domain/repositories/auth_repository.dart';
@@ -12,29 +13,28 @@ class SignupUseCase {
     required String name,
     required String studentNumber,
     required String nickname,
-    // deviceUuid는 RepositoryImpl에서 DeviceUuidService를 통해 가져오도록 수정했으므로,
-    // UseCase 파라미터에서는 제외하거나, RepositoryImpl에서 처리하지 않는다면 여기서 주입해야 함.
-    // 현재는 RepositoryImpl에서 처리하는 것으로 가정.
   }) async {
-    // 비밀번호 유효성 검사 등 추가 로직 가능
     if (password.length < 6) {
-      // 예시: 최소 6자
       throw ArgumentError('비밀번호는 6자 이상이어야 합니다.');
     }
+    // UseCase에서 직접 deviceUuid를 가져와서 Repository에 전달
     final deviceUuid = await repository.getDeviceUuid();
     if (deviceUuid == null) {
-      throw Exception('기기 ID를 가져올 수 없습니다. 앱을 재시작하거나 지원팀에 문의하세요.');
+      // 이 경우는 거의 발생하지 않아야 함 (getOrCreateDeviceUuid 사용 시)
+      throw Exception('기기 ID를 생성하거나 가져올 수 없습니다. 앱을 재시작하거나 관리자에게 문의하세요.');
     }
 
-    return await repository.signup(
-      SignupRequestModel(
-        email: email,
-        password: password,
-        name: name,
-        studentNumber: studentNumber,
-        nickname: nickname,
-        deviceUuid: deviceUuid,
-      ),
+    final requestModel = SignupRequestModel(
+      // 모델 생성 시 deviceUuid 제외
+      email: email,
+      password: password,
+      name: name,
+      studentNumber: studentNumber,
+      nickname: nickname,
     );
+    return await repository.signup(
+      requestModel,
+      deviceUuid,
+    ); // deviceUuid를 별도 전달
   }
 }
