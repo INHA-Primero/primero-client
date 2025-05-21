@@ -1,60 +1,63 @@
-// import 'package:flutter/material.dart';
-
-// import 'package:primero/core/theme/app_text_style.dart';
-
-// class MyApp extends StatelessWidget {
-//   const MyApp({super.key});
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return MaterialApp(
-//       title: 'INHArit',
-//       theme: ThemeData(fontFamily: 'RedHatDisplay', useMaterial3: true),
-//       home: const _DemoScreen(),
-//     );
-//   }
-// }
-
-// /// 데모: AppTextStyle 을 직접 쓰는 화면
-// class _DemoScreen extends StatelessWidget {
-//   const _DemoScreen();
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       body: Center(
-//         child: Column(
-//           mainAxisSize: MainAxisSize.min,
-//           children: const [
-//             Text('Regular 텍스트', style: AppTextStyle.regular),
-//             SizedBox(height: 8),
-//             Text('Medium 텍스트', style: AppTextStyle.medium),
-//             SizedBox(height: 8),
-//             Text('SemiBold 텍스트', style: AppTextStyle.semiBold),
-//             SizedBox(height: 8),
-//             Text('Bold 텍스트', style: AppTextStyle.bold),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
+// lib/app/app_widget.dart
 import 'package:flutter/material.dart';
-import 'app_router.dart'; // 위에서 만든 라우터
-import '../core/theme/app_colors.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:primero/app/app_router.dart'; // goRouterProvider
+import 'package:primero/core/theme/app_colors.dart'; // AppColors.primary 사용 위함
 
-class MyApp extends StatelessWidget {
+class MyApp extends ConsumerWidget {
   const MyApp({super.key});
+
   @override
-  Widget build(BuildContext context) {
+  Widget build(BuildContext context, WidgetRef ref) {
+    final router = ref.watch(goRouterProvider);
+
     return MaterialApp.router(
       title: 'INHArit',
       theme: ThemeData(
         fontFamily: 'RedHatDisplay',
         useMaterial3: true,
-        // (원한다면 여기서 ColorScheme.fromSeed 등도 같이 설정)
+        // ColorScheme을 앱의 주요 색상(AppColors.primary) 기반으로 설정합니다.
+        // 이렇게 하면 TextFormField의 포커스 색상, 버튼 색상 등 많은 UI 요소가
+        // 일관되게 primary 색상을 따르게 됩니다.
+        colorScheme: ColorScheme.fromSeed(
+          seedColor: AppColors.primary,
+          // 필요에 따라 밝기(brightness)나 다른 색상 속성을 오버라이드 할 수 있습니다.
+          // brightness: Brightness.light,
+        ),
+        // 만약 InputDecorationTheme을 더 세밀하게 제어하고 싶다면 아래와 같이 설정 가능합니다.
+        // inputDecorationTheme: InputDecorationTheme(
+        //   focusedBorder: OutlineInputBorder(
+        //     borderSide: BorderSide(color: AppColors.primary, width: 2.0),
+        //     borderRadius: BorderRadius.circular(10.0),
+        //   ),
+        //   floatingLabelStyle: const TextStyle(color: AppColors.primary), // 포커스 시 레이블 색상
+        //   // 활성화된 (포커스되지 않은) 상태의 테두리 색상 등도 여기서 설정 가능
+        //   enabledBorder: OutlineInputBorder(
+        //     borderSide: BorderSide(color: Colors.grey.shade400),
+        //      borderRadius: BorderRadius.circular(10.0),
+        //   ),
+        //   // 아이콘 색상도 상태에 따라 변경 가능
+        //   prefixIconColor: MaterialStateColor.resolveWith((states) {
+        //     if (states.contains(MaterialState.focused)) {
+        //       return AppColors.primary;
+        //     }
+        //     if (states.contains(MaterialState.error)) {
+        //       return Theme.of(context).colorScheme.error;
+        //     }
+        //     return Colors.grey.shade600;
+        //   }),
+        // ),
+        appBarTheme: const AppBarTheme(
+          // AppBar 테마 통일성 (선택 사항)
+          elevation: 0, // 그림자 제거
+          backgroundColor: Colors.white, // 기본 AppBar 배경색
+          foregroundColor: Colors.black, // 기본 AppBar 아이콘/텍스트 색상
+          surfaceTintColor: Colors.transparent, // 스크롤 시 색상 변경 방지
+        ),
+        scaffoldBackgroundColor: Colors.white, // 기본 Scaffold 배경색
       ),
-      routerConfig: appRouter, // ← 이 한 줄이 GoRouter 를 붙이는 핵심
+      routerConfig: router,
+      debugShowCheckedModeBanner: false,
     );
   }
 }
