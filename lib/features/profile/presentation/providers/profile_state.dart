@@ -10,9 +10,8 @@ abstract class ProfileState extends Equatable {
 
 class ProfileInitial extends ProfileState {}
 
-class ProfileLoading extends ProfileState {}
+class ProfileLoading extends ProfileState {} // 프로필 정보 최초 로딩 시
 
-// 프로필 정보 로드 성공, 또는 닉네임/이미지 업데이트 성공 시 이 상태 사용
 class ProfileLoaded extends ProfileState {
   final UserProfileEntity userProfile;
   const ProfileLoaded(this.userProfile);
@@ -20,33 +19,33 @@ class ProfileLoaded extends ProfileState {
   List<Object?> get props => [userProfile];
 }
 
-// 프로필 정보 로드/업데이트 시 일반 오류
 class ProfileError extends ProfileState {
   final String message;
-  final UserProfileEntity? previousProfile; // 오류 시 이전 데이터 유지 옵션
+  final UserProfileEntity? previousProfile; // 오류 발생 시 이전 프로필 정보 (선택적)
   const ProfileError(this.message, {this.previousProfile});
   @override
   List<Object?> get props => [message, previousProfile];
 }
 
-// 닉네임/이미지 정보 업데이트 중
-class ProfileInfoUpdating extends ProfileLoaded {
-  // 기존 정보 표시 위해 ProfileLoaded 상속
-  const ProfileInfoUpdating(super.userProfile);
+/// 프로필 정보(닉네임 및/또는 이미지) 업데이트가 진행 중인 상태.
+/// ProfileLoaded를 상속하여 현재 프로필 정보를 UI에 계속 표시할 수 있도록 함.
+class ProfileFullUpdating extends ProfileLoaded {
+  const ProfileFullUpdating(super.userProfile);
 }
 
-// 닉네임/이미지 정보 업데이트 성공 (명시적 피드백용)
+/// 프로필 정보(닉네임 및/또는 이미지) 업데이트 성공 상태.
 class ProfileInfoUpdateSuccess extends ProfileLoaded {
   final String successMessage;
   const ProfileInfoUpdateSuccess(
     super.userProfile, {
-    this.successMessage = "프로필 정보가 업데이트되었습니다.",
+    this.successMessage = "프로필 정보가 성공적으로 업데이트되었습니다.",
   });
   @override
   List<Object?> get props => [userProfile, successMessage];
 }
 
-// 닉네임/이미지 정보 업데이트 실패
+/// 프로필 정보(닉네임 및/또는 이미지) 업데이트 실패 상태.
+/// 실패하더라도 이전 프로필 정보를 유지하여 UI에 표시할 수 있도록 ProfileLoaded를 상속.
 class ProfileInfoUpdateFailure extends ProfileLoaded {
   final String errorMessage;
   const ProfileInfoUpdateFailure(super.userProfile, this.errorMessage);
@@ -54,10 +53,10 @@ class ProfileInfoUpdateFailure extends ProfileLoaded {
   List<Object?> get props => [userProfile, errorMessage];
 }
 
-// 비밀번호 변경 관련 상태
+// 비밀번호 변경 관련 상태 (기존과 동일)
 class PasswordChangeInitial extends ProfileState {}
 
-class PasswordChangeLoading extends ProfileState {}
+class PasswordChangeLoading extends ProfileState {} // 비밀번호 변경 중 로딩
 
 class PasswordChangeSuccess extends ProfileState {
   final String successMessage;
