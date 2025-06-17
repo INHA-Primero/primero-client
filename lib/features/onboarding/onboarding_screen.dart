@@ -1,25 +1,27 @@
 // lib/features/onboarding/onboarding_screen.dart
+// 기존 UI는 100% 유지하고, 네비게이션 코드만 수정했습니다.
+
 import 'package:flutter/material.dart';
-// import 'package:flutter_riverpod/flutter_riverpod.dart'; // 현재 이 파일에서는 Riverpod 직접 사용 안 함
-import 'package:go_router/go_router.dart';
-import 'package:primero/app/app_router.dart'; // AppRouteNames 사용
+// go_router와 AppRouteNames import를 제거하고, 이동할 화면을 직접 import 합니다.
 import 'package:primero/core/theme/app_colors.dart';
 import 'package:primero/core/theme/app_text_style.dart';
+import 'package:primero/features/auth/ui/screens/login_screen.dart';
+import 'package:primero/features/auth/ui/screens/signup_screen.dart'; // 사용자님의 원래 회원가입 화면
 
 // 각 온보딩 페이지의 데이터를 담을 클래스
 class OnboardingPageData {
-  final String assetPath; // 로컬 에셋 이미지 경로
+  final String assetPath;
   final String title;
   final String subtitle;
-  final IconData? iconOnError; // 이미지 로드 실패 시 대체 아이콘
-  final double imageHeightFactor; // 페이지별 이미지 높이 조절을 위한 팩터
+  final IconData? iconOnError;
+  final double imageHeightFactor;
 
   OnboardingPageData({
     required this.assetPath,
     required this.title,
     required this.subtitle,
     this.iconOnError,
-    this.imageHeightFactor = 0.35, // 기본 이미지 높이 팩터
+    this.imageHeightFactor = 0.35,
   });
 }
 
@@ -34,36 +36,31 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
   final PageController _pageController = PageController();
   int _currentPage = 0;
 
-  // 온보딩 페이지 데이터 (assetPath에 실제 프로젝트 내 경로 지정)
-  // pubspec.yaml 파일에 assets/images/ 폴더가 등록되어 있어야 합니다.
   final List<OnboardingPageData> _onboardingPages = [
     OnboardingPageData(
       assetPath: "assets/images/onboarding_1.png",
       title: "우리 손으로 아기나무를!",
       subtitle: "인하대학교에서 플라스틱 재활용을 통해\n나무를 가꿔보자!",
       iconOnError: Icons.eco_rounded,
-      imageHeightFactor: 0.3, // 첫 번째 페이지만 이미지 크기를 약간 작게 (예: 화면 높이의 30%)
+      imageHeightFactor: 0.3,
     ),
     OnboardingPageData(
       assetPath: "assets/images/onboarding_2.png",
       title: "바코드 스캔으로 시작해요!",
       subtitle: "바코드를 스캔해 인증을 완료하고\n플라스틱을 준비하세요!",
       iconOnError: Icons.qr_code_scanner_rounded,
-      // imageHeightFactor: 0.35, // 기본값 사용
     ),
     OnboardingPageData(
       assetPath: "assets/images/onboarding_3.png",
       title: "AI가 플라스틱을 검사해요!",
       subtitle: "스캔을 통해 깨끗한 플라스틱을 인증받아\n포인트를 모아봐요!",
       iconOnError: Icons.smart_toy_rounded,
-      // imageHeightFactor: 0.35, // 기본값 사용
     ),
     OnboardingPageData(
       assetPath: "assets/images/onboarding_4.png",
       title: "포인트로 아기나무에 물을 주세요!",
       subtitle: "모은 포인트로 물을 주고\n함께 아기나무를 키워봐요!",
       iconOnError: Icons.water_drop_rounded,
-      // imageHeightFactor: 0.35, // 기본값 사용
     ),
   ];
 
@@ -106,13 +103,9 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
           Image.asset(
             pageData.assetPath,
             height:
-                MediaQuery.of(context).size.height *
-                pageData.imageHeightFactor, // 각 페이지별 높이 팩터 적용
+                MediaQuery.of(context).size.height * pageData.imageHeightFactor,
             fit: BoxFit.contain,
             errorBuilder: (context, error, stackTrace) {
-              print(
-                "Error loading asset: ${pageData.assetPath}, Error: $error",
-              );
               return Icon(
                 pageData.iconOnError ?? Icons.image_not_supported_rounded,
                 size: 100,
@@ -225,12 +218,17 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
                       borderRadius: BorderRadius.circular(25),
                     ),
                   ),
+                  // [수정된 부분 1]
                   onPressed: () {
-                    // "시작하기" 버튼은 항상 회원가입 화면으로 이동
-                    context.goNamed(AppRouteNames.signup);
+                    // 사용자님의 원래 회원가입 화면으로 이동합니다.
+                    Navigator.of(context).push(
+                      MaterialPageRoute(
+                        builder: (context) => const SignupScreen(),
+                      ),
+                    );
                   },
                   child: Text(
-                    '시작하기', // 버튼 텍스트 항상 "시작하기"
+                    '시작하기',
                     style: AppTextStyle.semiBold.copyWith(
                       color: Colors.white,
                       fontSize: 16,
@@ -241,9 +239,12 @@ class _OnboardingScreenState extends State<OnboardingScreen> {
             ),
             const SizedBox(height: 16),
             GestureDetector(
+              // [수정된 부분 2]
               onTap: () {
-                // 로그인 화면으로 이동
-                context.pushNamed(AppRouteNames.login);
+                // 로그인 화면으로 이동합니다.
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (context) => const LoginScreen()),
+                );
               },
               child: Padding(
                 padding: const EdgeInsets.symmetric(vertical: 8.0),
