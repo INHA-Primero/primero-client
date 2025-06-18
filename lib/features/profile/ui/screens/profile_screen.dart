@@ -2,13 +2,21 @@
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:package_info_plus/package_info_plus.dart';
 import 'package:primero/core/theme/app_colors.dart';
 import 'package:primero/core/theme/app_text_style.dart';
 import 'package:primero/features/auth/providers/auth_di.dart';
-import 'package:primero/features/profile/models/auth_log_res.dart'; // ✨ 1. 인증 로그 모델 Import
+import 'package:primero/features/inquiry/ui/screens/inquiry_list_screen.dart'; // 문의 목록 화면 import
+import 'package:primero/features/profile/models/auth_log_res.dart';
 import 'package:primero/features/profile/models/user_profile_model.dart';
 import 'package:primero/features/profile/providers/profile_di.dart';
 import 'package:primero/features/profile/ui/screens/profile_edit_screen.dart';
+
+final packageInfoProvider = FutureProvider.autoDispose<PackageInfo>((
+  ref,
+) async {
+  return PackageInfo.fromPlatform();
+});
 
 class ProfileScreen extends ConsumerWidget {
   const ProfileScreen({super.key});
@@ -22,12 +30,6 @@ class ProfileScreen extends ConsumerWidget {
     final profileNotifier = ref.read(profileNotifierProvider.notifier);
     const Color cardAndDividerColor = Color(0xFFF3F4F5);
 
-    void showMenuComingSoonSnackBar(String featureName) {
-      ScaffoldMessenger.of(
-        context,
-      ).showSnackBar(SnackBar(content: Text('$featureName 기능은 구현 예정입니다.')));
-    }
-
     void navigateToEditScreen(UserProfileModel profile) {
       Navigator.of(context).push(
         MaterialPageRoute(
@@ -36,7 +38,6 @@ class ProfileScreen extends ConsumerWidget {
       );
     }
 
-    // ✨ 2. AppBar 수정: 로그아웃 버튼 제거, EndDrawer(메뉴) 열기 기능 추가
     return Scaffold(
       backgroundColor: Colors.white,
       appBar: AppBar(
@@ -63,79 +64,137 @@ class ProfileScreen extends ConsumerWidget {
                     color: Colors.black,
                     size: 28,
                   ),
-                  onPressed:
-                      () => Scaffold.of(context).openEndDrawer(), // 메뉴 열기
+                  onPressed: () => Scaffold.of(context).openEndDrawer(),
                   tooltip: '메뉴',
                 ),
           ),
-          const SizedBox(width: 12), // 오른쪽 여백
+          const SizedBox(width: 12),
         ],
       ),
-      // ✨ 3. EndDrawer (오른쪽에서 나타나는 메뉴) 추가
       endDrawer: Drawer(
-        child: ListView(
-          padding: EdgeInsets.zero,
+        child: Column(
           children: [
-            DrawerHeader(
-              decoration: const BoxDecoration(color: AppColors.primary),
-              child: Text(
-                '메뉴',
-                style: AppTextStyle.bold.copyWith(
-                  color: Colors.white,
-                  fontSize: 24,
+            const DrawerHeader(
+              decoration: BoxDecoration(color: AppColors.primary),
+              child: Align(
+                alignment: Alignment.centerLeft,
+                child: Text(
+                  '메뉴',
+                  style: TextStyle(color: Colors.white, fontSize: 24),
                 ),
               ),
             ),
             ListTile(
-              leading: const Icon(Icons.support_agent_rounded),
+              leading: const Icon(
+                Icons.support_agent_rounded,
+                color: AppColors.darkGray,
+              ),
               title: const Text('문의하기'),
+              // ✨✨✨ 바로 이 부분입니다! ✨✨✨
               onTap: () {
                 Navigator.pop(context); // 메뉴 닫기
-                showMenuComingSoonSnackBar('문의하기');
+                // InquiryListScreen으로 이동하도록 수정
+                Navigator.of(context).push(
+                  MaterialPageRoute(
+                    builder: (context) => const InquiryListScreen(),
+                  ),
+                );
               },
             ),
-            const Divider(),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
               title: const Text('로그아웃'),
               onTap: () {
-                Navigator.pop(context); // 메뉴 닫기
+                Navigator.pop(context);
                 ref.read(authNotifierProvider.notifier).logout();
               },
             ),
+            const Spacer(),
+            _buildDrawerFooter(),
           ],
         ),
       ),
       body: RefreshIndicator(
-        onRefresh: () async {
-          await profileNotifier.loadUserProfile();
-        },
+        onRefresh: () => profileNotifier.loadUserProfile(),
         color: AppColors.primary,
         child: profileState.when(
           initial: () => _buildLoadingIndicator(),
           loading: () => _buildLoadingIndicator(),
-          // ✨ 4. loaded 상태에서 authLogs를 함께 전달받음
           loaded:
               (userProfile, authLogs) => _buildProfileView(
                 context,
                 userProfile,
-                authLogs, // 전달
+                authLogs,
                 navigateToEditScreen,
                 cardAndDividerColor,
               ),
-          error: (message, previousProfile) {
-            return _buildErrorView(
-              context,
-              message,
-              () => profileNotifier.loadUserProfile(),
-            );
-          },
+          error:
+              (message, previousProfile) => _buildErrorView(
+                context,
+                message,
+                () => profileNotifier.loadUserProfile(),
+              ),
         ),
       ),
     );
   }
 
-  // ✨ 5. _buildProfileView 메서드가 authLogs 리스트를 받도록 수정
+  Widget _buildDrawerFooter() {
+    return Consumer(
+      builder: (context, ref, child) {
+        final packageInfoAsync = ref.watch(packageInfoProvider);
+        final footerTextStyle = TextStyle(
+          color: Colors.grey[600],
+          fontSize: 12,
+        );
+
+        void showComingSoonSnackBar(String featureName) {
+          ScaffoldMessenger.of(
+            context,
+          ).showSnackBar(SnackBar(content: Text('$featureName 기능은 준비 중입니다.')));
+        }
+
+        return Padding(
+          padding: const EdgeInsets.all(16.0),
+          child: Column(
+            children: [
+              packageInfoAsync.when(
+                data:
+                    (info) => Text(
+                      'App Version: ${info.version} (${info.buildNumber})',
+                      style: footerTextStyle,
+                    ),
+                loading:
+                    () => const SizedBox(
+                      height: 18,
+                      width: 18,
+                      child: CircularProgressIndicator(strokeWidth: 2.0),
+                    ),
+                error: (e, s) => Text('버전 정보 로딩 실패', style: footerTextStyle),
+              ),
+              const SizedBox(height: 8),
+              Row(
+                mainAxisAlignment: MainAxisAlignment.center,
+                children: [
+                  InkWell(
+                    onTap: () => showComingSoonSnackBar('서비스 이용약관'),
+                    child: Text('Terms of Service', style: footerTextStyle),
+                  ),
+                  Text('  ·  ', style: footerTextStyle),
+                  InkWell(
+                    onTap: () => showComingSoonSnackBar('개인정보 처리방침'),
+                    child: Text('Privacy Policy', style: footerTextStyle),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        );
+      },
+    );
+  }
+
+  // ... 이하 다른 메서드들은 변경 없습니다 ...
   Widget _buildProfileView(
     BuildContext context,
     UserProfileModel profile,
@@ -160,13 +219,11 @@ class ProfileScreen extends ConsumerWidget {
           padding: EdgeInsets.only(bottom: 16.0),
           child: Text('인증 기록', style: AppTextStyle.bold),
         ),
-        // ✨ 6. 고정된 데이터 대신 API 데이터를 기반으로 인증 기록 리스트를 동적으로 생성
         _buildAuthHistoryList(context, authLogs, cardAndDividerColor),
       ],
     );
   }
 
-  // ✨ 7. 인증 기록 리스트를 동적으로 생성하는 위젯
   Widget _buildAuthHistoryList(
     BuildContext context,
     List<AuthLogRes> logs,
@@ -180,16 +237,15 @@ class ProfileScreen extends ConsumerWidget {
         ),
       );
     }
-    // API 응답을 기반으로 기록 아이템들을 생성
     return Column(
       children:
           logs
               .map(
                 (log) => _buildHistoryItem(
                   context,
-                  date: '${log.date} ${log.time}', // 날짜와 시간 결합
-                  place: log.location, // API 데이터 사용
-                  success: log.success, // API 데이터 사용
+                  date: '${log.date} ${log.time}',
+                  place: log.location,
+                  success: log.success,
                   cardColor: cardColor,
                 ),
               )
@@ -197,7 +253,6 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
-  // 나머지 위젯 빌더(_buildLoadingIndicator, _buildErrorView, _buildProfileCard, _buildHistoryItem)는 변경 사항이 없습니다.
   Widget _buildLoadingIndicator() {
     return const Center(
       child: Padding(
@@ -267,7 +322,6 @@ class ProfileScreen extends ConsumerWidget {
     Color cardBackgroundColor,
   ) {
     ImageProvider profileImageProvider;
-
     if (profile.profileImgPath != null &&
         profile.profileImgPath!.isNotEmpty &&
         (profile.profileImgPath!.startsWith('http://') ||
@@ -276,7 +330,6 @@ class ProfileScreen extends ConsumerWidget {
     } else {
       profileImageProvider = const AssetImage(defaultProfileAssetPath);
     }
-
     final TextStyle nameTextStyle = AppTextStyle.bold.copyWith(
       fontSize: 17,
       color: Colors.black87,
@@ -314,14 +367,13 @@ class ProfileScreen extends ConsumerWidget {
                       fit: BoxFit.contain,
                       width: profileImageSize,
                       height: profileImageSize,
-                      errorBuilder: (context, error, stackTrace) {
-                        return Image.asset(
-                          defaultProfileAssetPath,
-                          fit: BoxFit.contain,
-                          width: profileImageSize,
-                          height: profileImageSize,
-                        );
-                      },
+                      errorBuilder:
+                          (context, error, stackTrace) => Image.asset(
+                            defaultProfileAssetPath,
+                            fit: BoxFit.contain,
+                            width: profileImageSize,
+                            height: profileImageSize,
+                          ),
                     ),
                   ),
                 ),

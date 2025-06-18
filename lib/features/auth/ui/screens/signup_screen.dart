@@ -122,8 +122,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ),
           keyboardType: TextInputType.emailAddress,
           validator: (value) {
-            if (value == null || value.trim().isEmpty) return '이메일을 입력해주세요.';
-            if (!value.endsWith('@inha.edu')) return '인하대학교 이메일 주소를 입력해주세요.';
+            if (value == null || value.trim().isEmpty) {
+              return '이메일을 입력해주세요.';
+            }
+            if (!value.endsWith('@inha.edu')) {
+              return '인하대학교 이메일 주소를 입력해주세요.';
+            }
             return null;
           },
         ),
@@ -281,8 +285,12 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ),
           obscureText: _obscurePassword,
           validator: (value) {
-            if (value == null || value.isEmpty) return '비밀번호를 입력해주세요.';
-            if (value.length < 6) return '비밀번호는 6자 이상이어야 합니다.';
+            if (value == null || value.isEmpty) {
+              return '비밀번호를 입력해주세요.';
+            }
+            if (value.length < 6) {
+              return '비밀번호는 6자 이상이어야 합니다.';
+            }
             return null;
           },
         ),
@@ -349,7 +357,9 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
           ),
           keyboardType: TextInputType.number,
           validator: (value) {
-            if (value == null || value.trim().isEmpty) return '학번을 입력해주세요.';
+            if (value == null || value.trim().isEmpty) {
+              return '학번을 입력해주세요.';
+            }
             if (value.trim().length != 8 ||
                 int.tryParse(value.trim()) == null) {
               return '올바른 8자리 학번을 입력해주세요.';
@@ -407,41 +417,22 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ✨ [수정된 부분] ref.listen 전체를 교체해주세요.
+    // ✨ [수정됨] ref.listen에서 모든 성공 관련 SnackBar 호출부 삭제
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       next.maybeWhen(
-        // ✨ [올바른 방식] authenticated 상태를 여기서 직접 처리합니다.
         authenticated: () {
           if (mounted) {
-            ScaffoldMessenger.of(context).showSnackBar(
-              const SnackBar(
-                content: Text('회원가입을 환영합니다!'),
-                backgroundColor: AppColors.primary,
-              ),
-            );
             // 모든 상위 화면을 닫고 첫 화면으로 이동
             Navigator.of(context).popUntil((route) => route.isFirst);
           }
         },
         codeSentSuccess: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('인증 코드가 발송되었습니다.'),
-              backgroundColor: Colors.green,
-            ),
-          );
           setState(() {
             _currentStep = SignupStep.verifyCode;
             _formKey.currentState?.reset();
           });
         },
         verificationSuccess: () {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('인증 성공! 추가 정보를 입력해주세요.'),
-              backgroundColor: Colors.green,
-            ),
-          );
           setState(() {
             _currentStep = SignupStep.enterDetails;
             _formKey.currentState?.reset();
@@ -455,7 +446,6 @@ class _SignupScreenState extends ConsumerState<SignupScreen> {
             ),
           );
         },
-        // 그 외 다른 상태 변화는 이 화면에서 특별히 처리하지 않습니다.
         orElse: () {},
       );
     });

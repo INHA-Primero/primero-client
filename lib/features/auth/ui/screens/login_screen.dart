@@ -1,5 +1,4 @@
-// --- lib/features/auth/ui/screens/login_screen.dart ---
-// 기존 UI와 로직을 100% 유지하고, 네비게이션과 상태 확인 코드만 수정했습니다.
+// lib/features/auth/ui/screens/login_screen.dart
 
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
@@ -40,17 +39,10 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // ✨ [수정] ref.listen 부분에 Navigator.popUntil 추가
+    // ✨ [수정됨] ref.listen에서 authenticated 상태의 SnackBar 호출부 삭제
     ref.listen<AuthState>(authNotifierProvider, (previous, next) {
       next.maybeWhen(
         authenticated: () {
-          // 로그인 성공 시 스낵바를 보여주고,
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('환영합니다!'),
-              backgroundColor: AppColors.primary,
-            ),
-          );
           // 로그인/회원가입 과정에서 쌓인 모든 화면을 닫고 첫 화면(AppRouter)으로 돌아갑니다.
           Navigator.of(context).popUntil((route) => route.isFirst);
         },
@@ -119,10 +111,12 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 keyboardType: TextInputType.emailAddress,
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty)
+                  if (value == null || value.trim().isEmpty) {
                     return '이메일을 입력해주세요.';
-                  if (!value.contains('@') || !value.endsWith('inha.edu'))
+                  }
+                  if (!value.contains('@') || !value.endsWith('inha.edu')) {
                     return '올바른 인하대학교 이메일 주소를 입력해주세요.';
+                  }
                   return null;
                 },
               ),
@@ -153,7 +147,9 @@ class _LoginScreenState extends ConsumerState<LoginScreen> {
                 ),
                 obscureText: _obscurePassword,
                 validator: (value) {
-                  if (value == null || value.isEmpty) return '비밀번호를 입력해주세요.';
+                  if (value == null || value.isEmpty) {
+                    return '비밀번호를 입력해주세요.';
+                  }
                   return null;
                 },
               ),

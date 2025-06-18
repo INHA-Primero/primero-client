@@ -75,7 +75,14 @@ class ScanScreen extends ConsumerWidget {
                             color: Colors.black,
                             size: 30,
                           ),
-                          onPressed: () => onItemTapped(0),
+                          onPressed: () {
+                            // 1. 현재 ScanScreen을 닫아서 이전 화면(MainScaffold)으로 돌아갑니다.
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                            // 2. MainScaffold에게 홈(0번 탭)으로 이동하라고 알립니다.
+                            onItemTapped(0);
+                          },
                         ),
                       ),
                     ),
@@ -140,11 +147,16 @@ class ScanScreen extends ConsumerWidget {
                           ElevatedButton(
                             child: const Text("임시 성공"),
                             onPressed: () {
-                              _navigateToProcessing(
+                              // 로딩 화면을 건너뛰고 바로 성공 화면으로 이동
+                              Navigator.push(
                                 context,
-                                barcodeData,
-                                true, // isSuccess
-                                false, // isTestMode
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ResultScreen(
+                                        isSuccess: true, // 성공 결과로 고정
+                                        onItemTapped: onItemTapped,
+                                      ),
+                                ),
                               );
                             },
                           ),

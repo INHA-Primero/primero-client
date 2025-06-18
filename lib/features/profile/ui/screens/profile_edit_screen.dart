@@ -77,7 +77,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
     }
   }
 
-  // [수정] Notifier 함수를 직접 호출하고 결과를 처리하는 로직
+  // ✨ [수정됨] _submitUpdate 메서드에서 성공 SnackBar 호출부 삭제
   Future<void> _submitUpdate() async {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
@@ -93,12 +93,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       // 위젯이 아직 화면에 마운트되어 있는지 확인 후 UI 업데이트
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('프로필이 성공적으로 업데이트되었습니다.'),
-              backgroundColor: AppColors.primary,
-            ),
-          );
           Navigator.pop(context); // 성공 시 이전 화면으로 이동
         } else {
           // 실패 시 Notifier가 error 상태로 전환했으므로, 그 상태를 읽어 메시지 표시
@@ -283,8 +277,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 ),
                 style: AppTextStyle.regular,
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty)
+                  if (value == null || value.trim().isEmpty) {
                     return '나무 이름을 입력해주세요.';
+                  }
                   return null;
                 },
               ),
