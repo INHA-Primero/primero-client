@@ -1,67 +1,40 @@
+// lib/core/widgets/custom_bottom_nav_bar.dart
+
 import 'package:flutter/material.dart';
-import '../../core/theme/app_colors.dart';
+import 'package:primero/core/theme/app_colors.dart';
 
 class CustomBottomNavBar extends StatelessWidget {
   final int currentIndex;
   final ValueChanged<int> onTap;
 
   const CustomBottomNavBar({
+    super.key,
     required this.currentIndex,
     required this.onTap,
-    super.key,
   });
 
   @override
   Widget build(BuildContext context) {
-    return NavigationBar(
-      height: 60,
-      backgroundColor: Colors.white,
-      elevation: 4,
-      selectedIndex: currentIndex,
-      onDestinationSelected: onTap,
-      labelBehavior: NavigationDestinationLabelBehavior.alwaysHide,
-      indicatorColor: Colors.transparent,
-      destinations: [
-        NavigationDestination(
-          icon: Icon(
-            Icons.home_outlined,
-            size: 30,
-            color: Colors.grey.shade400,
-          ),
-          selectedIcon: Icon(Icons.home, size: 30, color: Colors.black),
-          label: '',
-        ),
-
-        // ★ QR 아이콘은 icon, selectedIcon을 똑같이 녹색 배경으로 고정
-        NavigationDestination(
-          icon: _buildCenter(),
-          selectedIcon: _buildCenter(),
-          label: '',
-        ),
-
-        NavigationDestination(
-          icon: Icon(
-            Icons.person_outline,
-            size: 30,
-            color: Colors.grey.shade400,
-          ),
-          selectedIcon: Icon(Icons.person, size: 30, color: Colors.black),
-          label: '',
-        ),
+    return BottomNavigationBar(
+      items: const <BottomNavigationBarItem>[
+        BottomNavigationBarItem(icon: Icon(Icons.home), label: '홈'),
+        BottomNavigationBarItem(icon: Icon(Icons.qr_code_scanner), label: '스캔'),
+        BottomNavigationBarItem(icon: Icon(Icons.person), label: '내 정보'),
       ],
-    );
-  }
-
-  /// 항상 녹색 배경 + 흰색 QR 아이콘
-  Widget _buildCenter() {
-    return Container(
-      width: 56,
-      height: 56,
-      decoration: const BoxDecoration(
-        color: AppColors.primary,
-        shape: BoxShape.circle,
-      ),
-      child: const Icon(Icons.qr_code_scanner, size: 32, color: Colors.white),
+      currentIndex: currentIndex,
+      // --- ✨ [수정] 선택된 아이템 색상을 primary 색상으로 변경 ---
+      selectedItemColor: AppColors.primary,
+      onTap: onTap,
+      // 아이템이 선택되지 않았을 때의 색상도 지정해주면 더 좋습니다.
+      unselectedItemColor: Colors.grey,
+      // 라벨 스타일을 지정하여 일관성을 높일 수 있습니다.
+      selectedLabelStyle: const TextStyle(fontSize: 12),
+      unselectedLabelStyle: const TextStyle(fontSize: 12),
+      // 배경색을 명시적으로 지정할 수 있습니다.
+      backgroundColor: Colors.white,
+      // 아이템이 4개 이상일 때의 레이아웃 문제를 방지합니다.
+      type: BottomNavigationBarType.fixed,
+      elevation: 5,
     );
   }
 }
