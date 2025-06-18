@@ -1,23 +1,26 @@
-// lib/core/widgets/main_scaffold.dart
-
 import 'package:flutter/material.dart';
-import 'package:primero/core/theme/app_colors.dart';
-import '../../features/home/home_screen.dart';
-import '../../features/profile/ui/screens/profile_screen.dart';
-import '../../features/scan/ui/scan_screen.dart';
+import 'package:primero/features/home/ui/screens/home_screen.dart';
+import 'package:primero/features/profile/ui/screens/profile_screen.dart';
+import 'package:primero/features/scan/ui/scan_screen.dart';
 import 'custom_bottom_nav_bar.dart';
 
+// 💡 3. 스캔 버튼을 아래로 내리기 위한 오프셋 값을 조정합니다.
 class _CustomFabLocation extends FloatingActionButtonLocation {
   const _CustomFabLocation();
 
   @override
   Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final Offset fabOffset = FloatingActionButtonLocation.centerDocked
-        .getOffset(scaffoldGeometry);
-    const double verticalAdjustment = 28.0;
-    return Offset(fabOffset.dx, fabOffset.dy + verticalAdjustment);
+    final double fabX = (scaffoldGeometry.scaffoldSize.width - scaffoldGeometry.floatingActionButtonSize.width) / 2;
+    // 숫자를 줄여서 버튼을 더 아래로 내립니다.
+    final double fabY = scaffoldGeometry.scaffoldSize.height 
+                      - scaffoldGeometry.bottomSheetSize.height 
+                      - scaffoldGeometry.floatingActionButtonSize.height
+                      - 30; // 값을 40에서 30으로 줄여서 아래로 이동
+    
+    return Offset(fabX, fabY);
   }
 }
+
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});
@@ -43,15 +46,13 @@ class _MainScaffoldState extends State<MainScaffold> {
 
   void _onItemTapped(int index) {
     if (index == 1) {
-      // 스캔 버튼을 누르면 ScanScreen을 새로운 페이지로 띄웁니다.
       Navigator.of(context).push(
         MaterialPageRoute(
           builder: (context) => ScanScreen(onItemTapped: _onItemTapped),
         ),
       );
-      return; // setState를 호출하지 않고 함수 종료
+      return;
     }
-    // 다른 탭(홈, 내 정보)은 상태를 변경하여 IndexedStack의 화면을 바꿉니다.
     setState(() {
       _selectedIndex = index;
     });
@@ -77,7 +78,7 @@ class _MainScaffoldState extends State<MainScaffold> {
                 'assets/images/scan_icon.png',
                 width: 28,
                 height: 28,
-                color: Colors.black, // 스캔 버튼은 항상 같은 색으로
+                color: Colors.black,
               ),
               const SizedBox(height: 4),
               const Text(
