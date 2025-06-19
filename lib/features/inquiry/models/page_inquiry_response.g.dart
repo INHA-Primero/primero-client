@@ -8,10 +8,9 @@ part of 'page_inquiry_response.dart';
 
 PageInquiryResponse _$PageInquiryResponseFromJson(Map<String, dynamic> json) =>
     PageInquiryResponse(
-      content:
-          (json['content'] as List<dynamic>)
-              .map((e) => InquiryResponse.fromJson(e as Map<String, dynamic>))
-              .toList(),
+      content: (json['content'] as List<dynamic>)
+          .map((e) => InquiryResponse.fromJson(e as Map<String, dynamic>))
+          .toList(),
       totalPages: (json['totalPages'] as num).toInt(),
       totalElements: (json['totalElements'] as num).toInt(),
       last: json['last'] as bool,
@@ -23,15 +22,15 @@ PageInquiryResponse _$PageInquiryResponseFromJson(Map<String, dynamic> json) =>
     );
 
 Map<String, dynamic> _$PageInquiryResponseToJson(
-  PageInquiryResponse instance,
-) => <String, dynamic>{
-  'content': instance.content,
-  'totalPages': instance.totalPages,
-  'totalElements': instance.totalElements,
-  'last': instance.last,
-  'size': instance.size,
-  'number': instance.number,
-  'numberOfElements': instance.numberOfElements,
-  'first': instance.first,
-  'empty': instance.empty,
-};
+        PageInquiryResponse instance) =>
+    <String, dynamic>{
+      'content': instance.content,
+      'totalPages': instance.totalPages,
+      'totalElements': instance.totalElements,
+      'last': instance.last,
+      'size': instance.size,
+      'number': instance.number,
+      'numberOfElements': instance.numberOfElements,
+      'first': instance.first,
+      'empty': instance.empty,
+    };

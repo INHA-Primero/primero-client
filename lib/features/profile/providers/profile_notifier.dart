@@ -1,26 +1,26 @@
 // lib/features/profile/providers/profile_notifier.dart
 
-import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:primero/features/home/providers/home_di.dart'; // 이 경로는 올바릅니다.
+import 'package:primero/features/home/repositories/home_repository.dart'; // 이 경로는 올바릅니다.
 import '../repositories/profile_repository.dart';
 import 'profile_state.dart';
 
 class ProfileNotifier extends StateNotifier<ProfileState> {
   final ProfileRepository _profileRepository;
+  final HomeRepository _homeRepository;
+  final Ref _ref; // Ref를 멤버 변수로 저장하여 다른 Provider에 접근 가능
 
-  ProfileNotifier(this._profileRepository)
-    : super(const ProfileState.initial()) {
+  ProfileNotifier(this._profileRepository, this._homeRepository, this._ref)
+      : super(const ProfileState.initial()) {
     loadUserProfile();
   }
 
   Future<void> loadUserProfile() async {
     state = const ProfileState.loading();
     try {
-      // 1. 사용자 프로필 정보를 먼저 가져옵니다.
       final userProfile = await _profileRepository.getUserProfile();
-      // 2. 가져온 프로필의 userId를 사용하여 인증 기록을 가져옵니다.
       final authLogs = await _profileRepository.getAuthLogs(userProfile.userId);
-      // 3. 두 데이터를 모두 포함하여 `loaded` 상태로 변경합니다.
       state = ProfileState.loaded(userProfile, authLogs);
     } catch (e) {
       state = ProfileState.error(e.toString());
@@ -29,7 +29,6 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
 
   Future<bool> updateProfileData({
     required String newNickname,
-    File? newImageFile,
   }) async {
     final currentState = state;
     if (currentState is! ProfileLoaded) return false;
@@ -37,12 +36,18 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
     final user = currentState.userProfile;
     state = const ProfileState.loading();
     try {
-      await _profileRepository.updateUserProfile(
-        userId: user.userId,
-        newTreeName: newNickname,
-        newImageFile: newImageFile,
-      );
-      await loadUserProfile(); // 성공 후 최신 정보 다시 로드
+      // 사용자 정보와 캐릭터 닉네임을 동시에 업데이트 (병렬 호출)
+      await Future.wait([
+        _profileRepository.updateUserProfile(
+          userId: user.userId,
+          newTreeName: newNickname,
+        ),
+        _homeRepository.updateNickname(newNickname),
+      ]);
+
+      await loadUserProfile(); // 프로필 데이터 새로고침
+      _ref.read(homeNotifierProvider.notifier).fetchHomeData(); // 홈 화면 데이터도 새로고침
+
       return true;
     } catch (e) {
       state = ProfileState.error(e.toString(), previousProfile: user);

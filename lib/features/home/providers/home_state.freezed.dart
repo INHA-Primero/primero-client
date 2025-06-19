@@ -20,8 +20,8 @@ mixin _$HomeState {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)
+    required TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)
         loaded,
     required TResult Function(String message) error,
   }) =>
@@ -30,8 +30,8 @@ mixin _$HomeState {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult? Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult? Function(String message)? error,
   }) =>
@@ -40,8 +40,8 @@ mixin _$HomeState {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -137,8 +137,8 @@ class _$InitialImpl implements _Initial {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)
+    required TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)
         loaded,
     required TResult Function(String message) error,
   }) {
@@ -150,8 +150,8 @@ class _$InitialImpl implements _Initial {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult? Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult? Function(String message)? error,
   }) {
@@ -163,8 +163,8 @@ class _$InitialImpl implements _Initial {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -260,8 +260,8 @@ class _$LoadingImpl implements _Loading {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)
+    required TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)
         loaded,
     required TResult Function(String message) error,
   }) {
@@ -273,8 +273,8 @@ class _$LoadingImpl implements _Loading {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult? Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult? Function(String message)? error,
   }) {
@@ -286,8 +286,8 @@ class _$LoadingImpl implements _Loading {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult Function(String message)? error,
     required TResult orElse(),
@@ -346,7 +346,10 @@ abstract class _$$LoadedImplCopyWith<$Res> {
           _$LoadedImpl value, $Res Function(_$LoadedImpl) then) =
       __$$LoadedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({UserProfileModel userProfile, CharacterInfoModel characterInfo});
+  $Res call(
+      {UserProfileModel userProfile,
+      CharacterInfoModel characterInfo,
+      bool isWatering});
 
   $CharacterInfoModelCopyWith<$Res> get characterInfo;
 }
@@ -366,6 +369,7 @@ class __$$LoadedImplCopyWithImpl<$Res>
   $Res call({
     Object? userProfile = null,
     Object? characterInfo = null,
+    Object? isWatering = null,
   }) {
     return _then(_$LoadedImpl(
       userProfile: null == userProfile
@@ -376,6 +380,10 @@ class __$$LoadedImplCopyWithImpl<$Res>
           ? _value.characterInfo
           : characterInfo // ignore: cast_nullable_to_non_nullable
               as CharacterInfoModel,
+      isWatering: null == isWatering
+          ? _value.isWatering
+          : isWatering // ignore: cast_nullable_to_non_nullable
+              as bool,
     ));
   }
 
@@ -393,16 +401,22 @@ class __$$LoadedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$LoadedImpl implements _Loaded {
-  const _$LoadedImpl({required this.userProfile, required this.characterInfo});
+  const _$LoadedImpl(
+      {required this.userProfile,
+      required this.characterInfo,
+      this.isWatering = false});
 
   @override
   final UserProfileModel userProfile;
   @override
   final CharacterInfoModel characterInfo;
+  @override
+  @JsonKey()
+  final bool isWatering;
 
   @override
   String toString() {
-    return 'HomeState.loaded(userProfile: $userProfile, characterInfo: $characterInfo)';
+    return 'HomeState.loaded(userProfile: $userProfile, characterInfo: $characterInfo, isWatering: $isWatering)';
   }
 
   @override
@@ -413,11 +427,14 @@ class _$LoadedImpl implements _Loaded {
             (identical(other.userProfile, userProfile) ||
                 other.userProfile == userProfile) &&
             (identical(other.characterInfo, characterInfo) ||
-                other.characterInfo == characterInfo));
+                other.characterInfo == characterInfo) &&
+            (identical(other.isWatering, isWatering) ||
+                other.isWatering == isWatering));
   }
 
   @override
-  int get hashCode => Object.hash(runtimeType, userProfile, characterInfo);
+  int get hashCode =>
+      Object.hash(runtimeType, userProfile, characterInfo, isWatering);
 
   /// Create a copy of HomeState
   /// with the given fields replaced by the non-null parameter values.
@@ -432,12 +449,12 @@ class _$LoadedImpl implements _Loaded {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)
+    required TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)
         loaded,
     required TResult Function(String message) error,
   }) {
-    return loaded(userProfile, characterInfo);
+    return loaded(userProfile, characterInfo, isWatering);
   }
 
   @override
@@ -445,12 +462,12 @@ class _$LoadedImpl implements _Loaded {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult? Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult? Function(String message)? error,
   }) {
-    return loaded?.call(userProfile, characterInfo);
+    return loaded?.call(userProfile, characterInfo, isWatering);
   }
 
   @override
@@ -458,14 +475,14 @@ class _$LoadedImpl implements _Loaded {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult Function(String message)? error,
     required TResult orElse(),
   }) {
     if (loaded != null) {
-      return loaded(userProfile, characterInfo);
+      return loaded(userProfile, characterInfo, isWatering);
     }
     return orElse();
   }
@@ -511,10 +528,12 @@ class _$LoadedImpl implements _Loaded {
 abstract class _Loaded implements HomeState {
   const factory _Loaded(
       {required final UserProfileModel userProfile,
-      required final CharacterInfoModel characterInfo}) = _$LoadedImpl;
+      required final CharacterInfoModel characterInfo,
+      final bool isWatering}) = _$LoadedImpl;
 
   UserProfileModel get userProfile;
   CharacterInfoModel get characterInfo;
+  bool get isWatering;
 
   /// Create a copy of HomeState
   /// with the given fields replaced by the non-null parameter values.
@@ -593,8 +612,8 @@ class _$ErrorImpl implements _Error {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)
+    required TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)
         loaded,
     required TResult Function(String message) error,
   }) {
@@ -606,8 +625,8 @@ class _$ErrorImpl implements _Error {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult? Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult? Function(String message)? error,
   }) {
@@ -619,8 +638,8 @@ class _$ErrorImpl implements _Error {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(
-            UserProfileModel userProfile, CharacterInfoModel characterInfo)?
+    TResult Function(UserProfileModel userProfile,
+            CharacterInfoModel characterInfo, bool isWatering)?
         loaded,
     TResult Function(String message)? error,
     required TResult orElse(),

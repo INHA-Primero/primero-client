@@ -20,10 +20,13 @@ CharacterInfoModel _$CharacterInfoModelFromJson(Map<String, dynamic> json) {
 
 /// @nodoc
 mixin _$CharacterInfoModel {
-  int get characterId => throw _privateConstructorUsedError;
-  int get userId => throw _privateConstructorUsedError;
+// 🔴 [수정] swagger.json에 명시된 필드명과 타입, 기본값을 정확히 일치시킵니다.
+// 불필요한 characterId, createdAt, lastModifiedAt 필드를 삭제합니다.
+  @JsonKey(name: 'exp', defaultValue: 0)
   int get exp => throw _privateConstructorUsedError;
+  @JsonKey(name: 'wateringChance', defaultValue: 0)
   int get wateringChance => throw _privateConstructorUsedError;
+  @JsonKey(name: 'nickname', defaultValue: '새싹')
   String get nickname => throw _privateConstructorUsedError;
 
   /// Serializes this CharacterInfoModel to a JSON map.
@@ -43,11 +46,9 @@ abstract class $CharacterInfoModelCopyWith<$Res> {
       _$CharacterInfoModelCopyWithImpl<$Res, CharacterInfoModel>;
   @useResult
   $Res call(
-      {int characterId,
-      int userId,
-      int exp,
-      int wateringChance,
-      String nickname});
+      {@JsonKey(name: 'exp', defaultValue: 0) int exp,
+      @JsonKey(name: 'wateringChance', defaultValue: 0) int wateringChance,
+      @JsonKey(name: 'nickname', defaultValue: '새싹') String nickname});
 }
 
 /// @nodoc
@@ -65,21 +66,11 @@ class _$CharacterInfoModelCopyWithImpl<$Res, $Val extends CharacterInfoModel>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? characterId = null,
-    Object? userId = null,
     Object? exp = null,
     Object? wateringChance = null,
     Object? nickname = null,
   }) {
     return _then(_value.copyWith(
-      characterId: null == characterId
-          ? _value.characterId
-          : characterId // ignore: cast_nullable_to_non_nullable
-              as int,
-      userId: null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as int,
       exp: null == exp
           ? _value.exp
           : exp // ignore: cast_nullable_to_non_nullable
@@ -105,11 +96,9 @@ abstract class _$$CharacterInfoModelImplCopyWith<$Res>
   @override
   @useResult
   $Res call(
-      {int characterId,
-      int userId,
-      int exp,
-      int wateringChance,
-      String nickname});
+      {@JsonKey(name: 'exp', defaultValue: 0) int exp,
+      @JsonKey(name: 'wateringChance', defaultValue: 0) int wateringChance,
+      @JsonKey(name: 'nickname', defaultValue: '새싹') String nickname});
 }
 
 /// @nodoc
@@ -125,21 +114,11 @@ class __$$CharacterInfoModelImplCopyWithImpl<$Res>
   @pragma('vm:prefer-inline')
   @override
   $Res call({
-    Object? characterId = null,
-    Object? userId = null,
     Object? exp = null,
     Object? wateringChance = null,
     Object? nickname = null,
   }) {
     return _then(_$CharacterInfoModelImpl(
-      characterId: null == characterId
-          ? _value.characterId
-          : characterId // ignore: cast_nullable_to_non_nullable
-              as int,
-      userId: null == userId
-          ? _value.userId
-          : userId // ignore: cast_nullable_to_non_nullable
-              as int,
       exp: null == exp
           ? _value.exp
           : exp // ignore: cast_nullable_to_non_nullable
@@ -160,29 +139,28 @@ class __$$CharacterInfoModelImplCopyWithImpl<$Res>
 @JsonSerializable()
 class _$CharacterInfoModelImpl implements _CharacterInfoModel {
   const _$CharacterInfoModelImpl(
-      {required this.characterId,
-      required this.userId,
-      required this.exp,
-      required this.wateringChance,
-      required this.nickname});
+      {@JsonKey(name: 'exp', defaultValue: 0) this.exp = 0,
+      @JsonKey(name: 'wateringChance', defaultValue: 0) this.wateringChance = 0,
+      @JsonKey(name: 'nickname', defaultValue: '새싹') required this.nickname});
 
   factory _$CharacterInfoModelImpl.fromJson(Map<String, dynamic> json) =>
       _$$CharacterInfoModelImplFromJson(json);
 
+// 🔴 [수정] swagger.json에 명시된 필드명과 타입, 기본값을 정확히 일치시킵니다.
+// 불필요한 characterId, createdAt, lastModifiedAt 필드를 삭제합니다.
   @override
-  final int characterId;
-  @override
-  final int userId;
-  @override
+  @JsonKey(name: 'exp', defaultValue: 0)
   final int exp;
   @override
+  @JsonKey(name: 'wateringChance', defaultValue: 0)
   final int wateringChance;
   @override
+  @JsonKey(name: 'nickname', defaultValue: '새싹')
   final String nickname;
 
   @override
   String toString() {
-    return 'CharacterInfoModel(characterId: $characterId, userId: $userId, exp: $exp, wateringChance: $wateringChance, nickname: $nickname)';
+    return 'CharacterInfoModel(exp: $exp, wateringChance: $wateringChance, nickname: $nickname)';
   }
 
   @override
@@ -190,9 +168,6 @@ class _$CharacterInfoModelImpl implements _CharacterInfoModel {
     return identical(this, other) ||
         (other.runtimeType == runtimeType &&
             other is _$CharacterInfoModelImpl &&
-            (identical(other.characterId, characterId) ||
-                other.characterId == characterId) &&
-            (identical(other.userId, userId) || other.userId == userId) &&
             (identical(other.exp, exp) || other.exp == exp) &&
             (identical(other.wateringChance, wateringChance) ||
                 other.wateringChance == wateringChance) &&
@@ -202,8 +177,7 @@ class _$CharacterInfoModelImpl implements _CharacterInfoModel {
 
   @JsonKey(includeFromJson: false, includeToJson: false)
   @override
-  int get hashCode => Object.hash(
-      runtimeType, characterId, userId, exp, wateringChance, nickname);
+  int get hashCode => Object.hash(runtimeType, exp, wateringChance, nickname);
 
   /// Create a copy of CharacterInfoModel
   /// with the given fields replaced by the non-null parameter values.
@@ -224,24 +198,25 @@ class _$CharacterInfoModelImpl implements _CharacterInfoModel {
 
 abstract class _CharacterInfoModel implements CharacterInfoModel {
   const factory _CharacterInfoModel(
-      {required final int characterId,
-      required final int userId,
-      required final int exp,
-      required final int wateringChance,
+      {@JsonKey(name: 'exp', defaultValue: 0) final int exp,
+      @JsonKey(name: 'wateringChance', defaultValue: 0)
+      final int wateringChance,
+      @JsonKey(name: 'nickname', defaultValue: '새싹')
       required final String nickname}) = _$CharacterInfoModelImpl;
 
   factory _CharacterInfoModel.fromJson(Map<String, dynamic> json) =
       _$CharacterInfoModelImpl.fromJson;
 
+// 🔴 [수정] swagger.json에 명시된 필드명과 타입, 기본값을 정확히 일치시킵니다.
+// 불필요한 characterId, createdAt, lastModifiedAt 필드를 삭제합니다.
   @override
-  int get characterId;
-  @override
-  int get userId;
-  @override
+  @JsonKey(name: 'exp', defaultValue: 0)
   int get exp;
   @override
+  @JsonKey(name: 'wateringChance', defaultValue: 0)
   int get wateringChance;
   @override
+  @JsonKey(name: 'nickname', defaultValue: '새싹')
   String get nickname;
 
   /// Create a copy of CharacterInfoModel

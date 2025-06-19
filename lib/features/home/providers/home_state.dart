@@ -4,7 +4,6 @@ import 'package:primero/features/profile/models/user_profile_model.dart';
 
 part 'home_state.freezed.dart';
 
-// 홈 화면에 필요한 모든 데이터를 담는 상태 클래스입니다.
 @freezed
 class HomeState with _$HomeState {
   const factory HomeState.initial() = _Initial;
@@ -12,6 +11,7 @@ class HomeState with _$HomeState {
   const factory HomeState.loaded({
     required UserProfileModel userProfile,
     required CharacterInfoModel characterInfo,
+    @Default(false) bool isWatering, // ✨ isWatering 플래그 추가
   }) = _Loaded;
   const factory HomeState.error(String message) = _Error;
 }

@@ -14,8 +14,12 @@ class AppRouter extends ConsumerWidget {
     final authState = ref.watch(authNotifierProvider);
 
     return authState.when(
-      initial: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
-      loading: () => const Scaffold(body: Center(child: CircularProgressIndicator())),
+      initial:
+          () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
+      loading:
+          () =>
+              const Scaffold(body: Center(child: CircularProgressIndicator())),
       // 인증 성공 시, 하단 탭을 포함한 MainScaffold를 보여줍니다.
       authenticated: () => const MainScaffold(),
       unauthenticated: () => const OnboardingOrLoginScreen(),

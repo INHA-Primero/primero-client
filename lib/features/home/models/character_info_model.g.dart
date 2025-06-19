@@ -9,18 +9,14 @@ part of 'character_info_model.dart';
 _$CharacterInfoModelImpl _$$CharacterInfoModelImplFromJson(
         Map<String, dynamic> json) =>
     _$CharacterInfoModelImpl(
-      characterId: (json['characterId'] as num).toInt(),
-      userId: (json['userId'] as num).toInt(),
-      exp: (json['exp'] as num).toInt(),
-      wateringChance: (json['wateringChance'] as num).toInt(),
-      nickname: json['nickname'] as String,
+      exp: (json['exp'] as num?)?.toInt() ?? 0,
+      wateringChance: (json['wateringChance'] as num?)?.toInt() ?? 0,
+      nickname: json['nickname'] as String? ?? '새싹',
     );
 
 Map<String, dynamic> _$$CharacterInfoModelImplToJson(
         _$CharacterInfoModelImpl instance) =>
     <String, dynamic>{
-      'characterId': instance.characterId,
-      'userId': instance.userId,
       'exp': instance.exp,
       'wateringChance': instance.wateringChance,
       'nickname': instance.nickname,
