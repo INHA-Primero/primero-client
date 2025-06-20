@@ -3,6 +3,7 @@ import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:lottie/lottie.dart';
 import 'package:primero/core/theme/app_text_style.dart';
 import 'package:primero/features/home/providers/home_di.dart';
+import 'package:primero/features/tree_map/ui/screens/tree_map_screen.dart';
 
 class HomeScreen extends ConsumerWidget {
   const HomeScreen({super.key});
@@ -35,12 +36,10 @@ class HomeScreen extends ConsumerWidget {
             ),
         loaded: (userProfile, characterInfo, isWatering) {
           final level = (characterInfo.exp / 100).floor() + 1;
-          final currentExp = characterInfo.exp % 100;
-          final expPercentage = currentExp / 100.0;
-
-          final characterImageLevel = (level > 5) ? 5 : level;
+          final expPercentage = (characterInfo.exp % 100) / 100.0;
           final characterImagePath =
-              'assets/images/level$characterImageLevel.png';
+              'assets/images/level${(level > 5) ? 5 : level}.png';
+          final double treeHeight = (level >= 5) ? 320 : 250;
 
           return Stack(
             fit: StackFit.expand,
@@ -56,49 +55,50 @@ class HomeScreen extends ConsumerWidget {
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
                       const SizedBox(height: 20),
+                      _CharacterStatusCard(
+                        level: level,
+                        nickname: characterInfo.nickname,
+                        expPercentage: expPercentage,
+                      ),
+                      const SizedBox(height: 10),
                       Column(
-                        crossAxisAlignment: CrossAxisAlignment.start,
+                        crossAxisAlignment:
+                            CrossAxisAlignment.start, // 자식들을 왼쪽으로 정렬
                         children: [
-                          _CharacterStatusCard(
-                            level: level,
-                            nickname: characterInfo.nickname,
-                            expPercentage: expPercentage,
+                          // ✨ UI 수정: 누를 수 없는 작은 파란색 정보 블록
+                          _InfoTextBlock(
+                            label: '${characterInfo.wateringChance}번 물주기 >',
                           ),
-                          const SizedBox(height: 16),
-                          Column(
-                            crossAxisAlignment: CrossAxisAlignment.start,
-                            children: [
-                              _CircularButton(
-                                iconData: Icons.water_drop_outlined,
-                                label: '${characterInfo.wateringChance}번 물주기 >',
-                                onPressed: () {
-                                  if (!isWatering &&
-                                      characterInfo.wateringChance > 0) {
-                                    ref
-                                        .read(homeNotifierProvider.notifier)
-                                        .waterCharacter();
-                                  } else if (characterInfo.wateringChance <=
-                                      0) {
-                                    ScaffoldMessenger.of(context).showSnackBar(
-                                      const SnackBar(
-                                        content: Text('물주기 기회가 없습니다.'),
-                                      ),
-                                    );
-                                  }
-                                },
-                              ),
-                              const SizedBox(height: 12),
-                              _CircularButton(
-                                iconData: Icons.map_outlined,
-                                onPressed: () {
-                                  ScaffoldMessenger.of(context).showSnackBar(
-                                    const SnackBar(
-                                      content: Text('지도 기능은 준비 중입니다.'),
-                                    ),
-                                  );
-                                },
-                              ),
-                            ],
+                          const SizedBox(height: 8),
+                          // ✨ UI 수정: 다시 원래의 물주기 아이콘 버튼으로 변경
+                          _CustomIconButton(
+                            iconData: Icons.water_drop_outlined,
+                            onPressed: () {
+                              if (!isWatering &&
+                                  characterInfo.wateringChance > 0) {
+                                ref
+                                    .read(homeNotifierProvider.notifier)
+                                    .waterCharacter();
+                              } else if (characterInfo.wateringChance <= 0) {
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  const SnackBar(
+                                    content: Text('물주기 기회가 없습니다.'),
+                                  ),
+                                );
+                              }
+                            },
+                          ),
+                          const SizedBox(height: 12),
+                          _CustomIconButton(
+                            iconData: Icons.map_outlined,
+                            onPressed: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                  builder: (context) => const TreeMapScreen(),
+                                ),
+                              );
+                            },
                           ),
                         ],
                       ),
@@ -106,7 +106,7 @@ class HomeScreen extends ConsumerWidget {
                       Center(
                         child: Image.asset(
                           characterImagePath,
-                          height: 250,
+                          height: treeHeight,
                           errorBuilder: (context, error, stackTrace) {
                             return Image.asset(
                               'assets/images/level1.png',
@@ -121,72 +121,71 @@ class HomeScreen extends ConsumerWidget {
                   ),
                 ),
               ),
-              // if (isWatering)
-              //   // 여기에 Positioned 위젯을 추가하여 Lottie 애니메이션의 위치를 조정합니다.
-              //   Positioned(
-              //     // top 값을 조정하여 Lottie 애니메이션을 아래로 내릴 수 있습니다.
-              //     // 전체 화면 높이의 비율(0.4 = 40%) 또는 고정 값(예: 300.0)을 사용할 수 있습니다.
-              //     // 화면 하단에 가깝게 하려면 top 값을 늘리거나 bottom 값을 줄이세요.
-              //     // 예를 들어, 화면 하단에서 100 픽셀 위에 배치하려면 bottom: 100.0으로 설정합니다.
-              //     // top:
-              //     //     MediaQuery.of(context).size.height *
-              //     //     0.01, // 55% 지점에서 시작 (이 값을 조절)
-              //     // left: 0, // 가로 중앙 정렬을 위해 left와 right를 0으로 설정
-              //     // right: 0,
-              //     child: Container(
-              //       alignment: Alignment.center, // Container 내에서 Lottie를 중앙에 배치
-              //       child: Lottie.asset(
-              //         'assets/lottie/watering.json',
-              //         width: 3000,
-              //         height: 3000,
-              //         repeat: false, // Lottie가 Container 내부에 맞춰지도록 설정
-              //       ),
-              //     ),
-              //   ),
+              // 물주기 애니메이션
               if (isWatering)
-                Positioned(
-                  // Positioned 위젯은 Container의 '위치'를 결정합니다.
-                  // top, bottom, left, right를 모두 지정하면 Container는 Stack의 해당 영역을 채웁니다.
-                  // 예를 들어, top:0, bottom:0, left:0, right:0 이면 Stack 전체를 채웁니다.
-                  top:
-                      MediaQuery.of(context).size.height *
-                      0.01, // 상단에서 55% 지점 (이 값을 조절)
-                  left: 0,
-                  right: 0,
-                  child: Container(
-                    // 여기서 Container의 크기를 직접 지정할 수 있습니다.
-                    // 명시적으로 width와 height를 설정합니다.
-
-                    // 옵션 1: Lottie가 화면 하단 근처에서 크게 보이도록 Container의 높이를 명시적으로 지정
-                    //        가로는 left:0, right:0으로 이미 화면 폭 전체를 차지합니다.
-                    height:
-                        MediaQuery.of(context).size.height *
-                        1.0, // 화면 높이의 40%로 Container 높이 설정 (조절 가능)
-                    // Lottie 애니메이션의 원하는 최대 높이에 따라 이 값을 조절하세요.
-                    alignment: Alignment.center, // Container 내에서 Lottie를 중앙에 배치
-
+                Center(
+                  child: Transform.scale(
+                    scale: 2.0,
                     child: Lottie.asset(
                       'assets/lottie/watering.json',
-                      // Lottie의 width/height는 이제 부모 Container의 명시된 크기 내에서 동작합니다.
-                      // Container가 충분히 커지면, Lottie의 width/height는 원하는 최대 크기를 지정할 수 있습니다.
-                      // 다만, Lottie의 width/height가 Container의 크기보다 크면 잘릴 수 있습니다.
-                      // 일반적으로 Lottie의 width/height는 Container에 fit하도록 설정하거나,
-                      // Container의 크기에 맞춰 null로 두는 경우가 많습니다.
-                      // 여기서는 Container 크기에 맞춰질 것이므로, Lottie의 width/height를 제거하거나 적절히 조절합니다.
-                      width:
-                          1000, // Lottie 애니메이션 자체의 원하는 너비 (Container 높이와 비율에 맞게 조절)
-                      height:
-                          1000, // Lottie 애니메이션 자체의 원하는 높이 (Container 높이와 비율에 맞게 조절)
                       repeat: false,
-                      fit:
-                          BoxFit
-                              .contain, // Lottie가 Container 내부에 비율을 유지하며 맞춰지도록 설정
                     ),
                   ),
                 ),
             ],
           );
         },
+      ),
+    );
+  }
+}
+
+// ✨ UI 수정: 누를 수 없는 작은 파란색 텍스트 블록 위젯
+class _InfoTextBlock extends StatelessWidget {
+  final String label;
+
+  const _InfoTextBlock({required this.label});
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 4),
+      decoration: BoxDecoration(
+        color: const Color(0xFF67C5E5).withOpacity(0.9), // 이미지와 유사한 파란색
+        borderRadius: BorderRadius.circular(20.0), // 둥근 모서리
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.2),
+            spreadRadius: 1,
+            blurRadius: 3,
+            offset: const Offset(0, 2),
+          ),
+        ],
+      ),
+      child: Text(
+        label,
+        style: AppTextStyle.bold.copyWith(color: Colors.white, fontSize: 14),
+      ),
+    );
+  }
+}
+
+// 원형 아이콘 버튼 위젯 (물주기, 지도 공용)
+class _CustomIconButton extends StatelessWidget {
+  final IconData iconData;
+  final VoidCallback onPressed;
+
+  const _CustomIconButton({required this.iconData, required this.onPressed});
+
+  @override
+  Widget build(BuildContext context) {
+    return InkWell(
+      onTap: onPressed,
+      borderRadius: BorderRadius.circular(50),
+      child: CircleAvatar(
+        radius: 32,
+        backgroundColor: Colors.white.withOpacity(0.9),
+        child: Icon(iconData, color: const Color(0xFF90A955), size: 38),
       ),
     );
   }
@@ -280,37 +279,6 @@ class _CharacterStatusCard extends StatelessWidget {
             ],
           ),
         ),
-      ),
-    );
-  }
-}
-
-class _CircularButton extends StatelessWidget {
-  final IconData iconData;
-  final String? label;
-  final VoidCallback? onPressed;
-
-  const _CircularButton({required this.iconData, this.label, this.onPressed});
-
-  @override
-  Widget build(BuildContext context) {
-    return InkWell(
-      onTap: onPressed,
-      child: Row(
-        children: [
-          CircleAvatar(
-            backgroundColor: Colors.white,
-            child: Icon(iconData, color: const Color(0xFF90A955)),
-          ),
-          if (label != null)
-            Padding(
-              padding: const EdgeInsets.only(left: 10.0),
-              child: Text(
-                label!,
-                style: AppTextStyle.medium.copyWith(fontSize: 16),
-              ),
-            ),
-        ],
       ),
     );
   }
