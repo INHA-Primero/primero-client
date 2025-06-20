@@ -20,9 +20,7 @@ mixin _$ProfileState {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, List<AuthLogRes> authLogs)
-        loaded,
+    required TResult Function(UserProfileModel userProfile) loaded,
     required TResult Function(String message, UserProfileModel? previousProfile)
         error,
   }) =>
@@ -31,8 +29,7 @@ mixin _$ProfileState {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult? Function(UserProfileModel userProfile)? loaded,
     TResult? Function(String message, UserProfileModel? previousProfile)? error,
   }) =>
       throw _privateConstructorUsedError;
@@ -40,8 +37,7 @@ mixin _$ProfileState {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult Function(UserProfileModel userProfile)? loaded,
     TResult Function(String message, UserProfileModel? previousProfile)? error,
     required TResult orElse(),
   }) =>
@@ -137,9 +133,7 @@ class _$InitialImpl implements _Initial {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, List<AuthLogRes> authLogs)
-        loaded,
+    required TResult Function(UserProfileModel userProfile) loaded,
     required TResult Function(String message, UserProfileModel? previousProfile)
         error,
   }) {
@@ -151,8 +145,7 @@ class _$InitialImpl implements _Initial {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult? Function(UserProfileModel userProfile)? loaded,
     TResult? Function(String message, UserProfileModel? previousProfile)? error,
   }) {
     return initial?.call();
@@ -163,8 +156,7 @@ class _$InitialImpl implements _Initial {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult Function(UserProfileModel userProfile)? loaded,
     TResult Function(String message, UserProfileModel? previousProfile)? error,
     required TResult orElse(),
   }) {
@@ -259,9 +251,7 @@ class _$LoadingImpl implements _Loading {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, List<AuthLogRes> authLogs)
-        loaded,
+    required TResult Function(UserProfileModel userProfile) loaded,
     required TResult Function(String message, UserProfileModel? previousProfile)
         error,
   }) {
@@ -273,8 +263,7 @@ class _$LoadingImpl implements _Loading {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult? Function(UserProfileModel userProfile)? loaded,
     TResult? Function(String message, UserProfileModel? previousProfile)? error,
   }) {
     return loading?.call();
@@ -285,8 +274,7 @@ class _$LoadingImpl implements _Loading {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult Function(UserProfileModel userProfile)? loaded,
     TResult Function(String message, UserProfileModel? previousProfile)? error,
     required TResult orElse(),
   }) {
@@ -344,7 +332,7 @@ abstract class _$$ProfileLoadedImplCopyWith<$Res> {
           _$ProfileLoadedImpl value, $Res Function(_$ProfileLoadedImpl) then) =
       __$$ProfileLoadedImplCopyWithImpl<$Res>;
   @useResult
-  $Res call({UserProfileModel userProfile, List<AuthLogRes> authLogs});
+  $Res call({UserProfileModel userProfile});
 }
 
 /// @nodoc
@@ -361,17 +349,12 @@ class __$$ProfileLoadedImplCopyWithImpl<$Res>
   @override
   $Res call({
     Object? userProfile = null,
-    Object? authLogs = null,
   }) {
     return _then(_$ProfileLoadedImpl(
       null == userProfile
           ? _value.userProfile
           : userProfile // ignore: cast_nullable_to_non_nullable
               as UserProfileModel,
-      null == authLogs
-          ? _value._authLogs
-          : authLogs // ignore: cast_nullable_to_non_nullable
-              as List<AuthLogRes>,
     ));
   }
 }
@@ -379,22 +362,14 @@ class __$$ProfileLoadedImplCopyWithImpl<$Res>
 /// @nodoc
 
 class _$ProfileLoadedImpl implements ProfileLoaded {
-  const _$ProfileLoadedImpl(this.userProfile, final List<AuthLogRes> authLogs)
-      : _authLogs = authLogs;
+  const _$ProfileLoadedImpl(this.userProfile);
 
   @override
   final UserProfileModel userProfile;
-  final List<AuthLogRes> _authLogs;
-  @override
-  List<AuthLogRes> get authLogs {
-    if (_authLogs is EqualUnmodifiableListView) return _authLogs;
-    // ignore: implicit_dynamic_type
-    return EqualUnmodifiableListView(_authLogs);
-  }
 
   @override
   String toString() {
-    return 'ProfileState.loaded(userProfile: $userProfile, authLogs: $authLogs)';
+    return 'ProfileState.loaded(userProfile: $userProfile)';
   }
 
   @override
@@ -403,13 +378,11 @@ class _$ProfileLoadedImpl implements ProfileLoaded {
         (other.runtimeType == runtimeType &&
             other is _$ProfileLoadedImpl &&
             (identical(other.userProfile, userProfile) ||
-                other.userProfile == userProfile) &&
-            const DeepCollectionEquality().equals(other._authLogs, _authLogs));
+                other.userProfile == userProfile));
   }
 
   @override
-  int get hashCode => Object.hash(
-      runtimeType, userProfile, const DeepCollectionEquality().hash(_authLogs));
+  int get hashCode => Object.hash(runtimeType, userProfile);
 
   /// Create a copy of ProfileState
   /// with the given fields replaced by the non-null parameter values.
@@ -424,13 +397,11 @@ class _$ProfileLoadedImpl implements ProfileLoaded {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, List<AuthLogRes> authLogs)
-        loaded,
+    required TResult Function(UserProfileModel userProfile) loaded,
     required TResult Function(String message, UserProfileModel? previousProfile)
         error,
   }) {
-    return loaded(userProfile, authLogs);
+    return loaded(userProfile);
   }
 
   @override
@@ -438,11 +409,10 @@ class _$ProfileLoadedImpl implements ProfileLoaded {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult? Function(UserProfileModel userProfile)? loaded,
     TResult? Function(String message, UserProfileModel? previousProfile)? error,
   }) {
-    return loaded?.call(userProfile, authLogs);
+    return loaded?.call(userProfile);
   }
 
   @override
@@ -450,13 +420,12 @@ class _$ProfileLoadedImpl implements ProfileLoaded {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult Function(UserProfileModel userProfile)? loaded,
     TResult Function(String message, UserProfileModel? previousProfile)? error,
     required TResult orElse(),
   }) {
     if (loaded != null) {
-      return loaded(userProfile, authLogs);
+      return loaded(userProfile);
     }
     return orElse();
   }
@@ -500,12 +469,10 @@ class _$ProfileLoadedImpl implements ProfileLoaded {
 }
 
 abstract class ProfileLoaded implements ProfileState {
-  const factory ProfileLoaded(
-          final UserProfileModel userProfile, final List<AuthLogRes> authLogs) =
+  const factory ProfileLoaded(final UserProfileModel userProfile) =
       _$ProfileLoadedImpl;
 
   UserProfileModel get userProfile;
-  List<AuthLogRes> get authLogs;
 
   /// Create a copy of ProfileState
   /// with the given fields replaced by the non-null parameter values.
@@ -593,9 +560,7 @@ class _$ErrorImpl implements _Error {
   TResult when<TResult extends Object?>({
     required TResult Function() initial,
     required TResult Function() loading,
-    required TResult Function(
-            UserProfileModel userProfile, List<AuthLogRes> authLogs)
-        loaded,
+    required TResult Function(UserProfileModel userProfile) loaded,
     required TResult Function(String message, UserProfileModel? previousProfile)
         error,
   }) {
@@ -607,8 +572,7 @@ class _$ErrorImpl implements _Error {
   TResult? whenOrNull<TResult extends Object?>({
     TResult? Function()? initial,
     TResult? Function()? loading,
-    TResult? Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult? Function(UserProfileModel userProfile)? loaded,
     TResult? Function(String message, UserProfileModel? previousProfile)? error,
   }) {
     return error?.call(message, previousProfile);
@@ -619,8 +583,7 @@ class _$ErrorImpl implements _Error {
   TResult maybeWhen<TResult extends Object?>({
     TResult Function()? initial,
     TResult Function()? loading,
-    TResult Function(UserProfileModel userProfile, List<AuthLogRes> authLogs)?
-        loaded,
+    TResult Function(UserProfileModel userProfile)? loaded,
     TResult Function(String message, UserProfileModel? previousProfile)? error,
     required TResult orElse(),
   }) {

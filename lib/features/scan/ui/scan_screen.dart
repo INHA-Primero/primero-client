@@ -1,6 +1,6 @@
+import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
-import 'package:barcode_widget/barcode_widget.dart';
 import 'package:primero/core/theme/app_text_style.dart';
 import 'package:primero/features/profile/providers/profile_di.dart';
 import 'package:primero/features/scan/ui/processing_screen.dart';
@@ -39,27 +39,13 @@ class ScanScreen extends ConsumerWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Image.asset("assets/images/scan_background.png", fit: BoxFit.cover),
+          Container(color: Colors.white),
           SafeArea(
             child: profileState.when(
-              loading:
-                  () => const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-              error:
-                  (e, s) => Center(
-                    child: Text(
-                      "오류: $e",
-                      style: const TextStyle(color: Colors.white),
-                    ),
-                  ),
-              initial:
-                  () => const Center(
-                    child: CircularProgressIndicator(color: Colors.white),
-                  ),
-              // ✨✨✨ 오류 수정: (userProfile, authLogs) 두 개의 파라미터를 받도록 수정 ✨✨✨
-              loaded: (userProfile, authLogs) {
-                // authLogs는 이 화면에서 사용하지 않으므로 무시합니다.
+              initial: () => const Center(child: CircularProgressIndicator()),
+              loading: () => const Center(child: CircularProgressIndicator()),
+              // ✨ 수정된 부분: 이제 loaded 콜백은 userProfile 하나만 받습니다.
+              loaded: (userProfile) {
                 final barcodeData =
                     'INHA${userProfile.userId.toString().padLeft(8, '0')}';
 
@@ -76,11 +62,9 @@ class ScanScreen extends ConsumerWidget {
                             size: 30,
                           ),
                           onPressed: () {
-                            // 1. 현재 ScanScreen을 닫아서 이전 화면(MainScaffold)으로 돌아갑니다.
                             if (Navigator.canPop(context)) {
                               Navigator.pop(context);
                             }
-                            // 2. MainScaffold에게 홈(0번 탭)으로 이동하라고 알립니다.
                             onItemTapped(0);
                           },
                         ),
@@ -88,8 +72,9 @@ class ScanScreen extends ConsumerWidget {
                     ),
                     Expanded(
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const SizedBox(height: 10),
+                          const Spacer(),
                           const Image(
                             image: AssetImage("assets/images/babyTree.png"),
                             width: 60,
@@ -114,21 +99,16 @@ class ScanScreen extends ConsumerWidget {
                               drawText: false,
                             ),
                           ),
-                          const Spacer(),
-                          const Padding(
-                            padding: EdgeInsets.only(
-                              bottom: 20.0,
-                            ), // 텍스트가 잘리지 않도록 여백 추가
-                            child: Text(
-                              "바코드 스캐너에 인식시켜주세요!",
-                              style: TextStyle(
-                                // AppTextStyle 대신 기본 TextStyle 사용 (배경 이미지에 따라 가독성 조절)
-                                color: Colors.black87,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          const SizedBox(height: 40),
+                          const Text(
+                            "바코드 스캐너에 인식시켜주세요!",
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
+                          const Spacer(flex: 2),
                         ],
                       ),
                     ),
@@ -138,7 +118,7 @@ class ScanScreen extends ConsumerWidget {
                         16.0,
                         16.0,
                         32.0,
-                      ), // 하단 여백 추가
+                      ),
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         spacing: 12.0,
@@ -147,13 +127,12 @@ class ScanScreen extends ConsumerWidget {
                           ElevatedButton(
                             child: const Text("임시 성공"),
                             onPressed: () {
-                              // 로딩 화면을 건너뛰고 바로 성공 화면으로 이동
                               Navigator.push(
                                 context,
                                 MaterialPageRoute(
                                   builder:
                                       (_) => ResultScreen(
-                                        isSuccess: true, // 성공 결과로 고정
+                                        isSuccess: true,
                                         onItemTapped: onItemTapped,
                                       ),
                                 ),
@@ -192,6 +171,9 @@ class ScanScreen extends ConsumerWidget {
                   ],
                 );
               },
+              error:
+                  (message, previousProfile) =>
+                      Center(child: Text('프로필을 불러오는 중 오류가 발생했습니다: $message')),
             ),
           ),
         ],

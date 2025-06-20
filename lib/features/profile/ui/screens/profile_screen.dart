@@ -1,17 +1,18 @@
-// lib/features/profile/ui/screens/profile_screen.dart
-
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:intl/intl.dart';
 import 'package:package_info_plus/package_info_plus.dart';
 import 'package:primero/core/theme/app_colors.dart';
 import 'package:primero/core/theme/app_text_style.dart';
 import 'package:primero/features/auth/providers/auth_di.dart';
-import 'package:primero/features/inquiry/ui/screens/inquiry_list_screen.dart'; // 문의 목록 화면 import
-import 'package:primero/features/profile/models/auth_log_res.dart';
+import 'package:primero/features/inquiry/ui/screens/inquiry_list_screen.dart';
+import 'package:primero/features/profile/models/recycle_history_model.dart';
 import 'package:primero/features/profile/models/user_profile_model.dart';
 import 'package:primero/features/profile/providers/profile_di.dart';
+import 'package:primero/features/profile/providers/recycle_history_provider.dart';
 import 'package:primero/features/profile/ui/screens/profile_edit_screen.dart';
 
+// 버전 정보를 위한 Provider
 final packageInfoProvider = FutureProvider.autoDispose<PackageInfo>((
   ref,
 ) async {
@@ -27,6 +28,9 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(profileNotifierProvider);
+    final historyState = ref.watch(
+      recentRecycleHistoryProvider,
+    ); // 수정된 Provider 사용
     final profileNotifier = ref.read(profileNotifierProvider.notifier);
     const Color cardAndDividerColor = Color(0xFFF3F4F5);
 
@@ -74,26 +78,36 @@ class ProfileScreen extends ConsumerWidget {
       endDrawer: Drawer(
         child: Column(
           children: [
-            const DrawerHeader(
-              decoration: BoxDecoration(color: AppColors.primary),
-              child: Align(
-                alignment: Alignment.centerLeft,
+            // ✨ [UI 수정 1] DrawerHeader를 좀 더 간결하게 수정
+            Container(
+              width: double.infinity,
+              height: 120, // 높이를 줄여 공간 확보
+              color: AppColors.primary,
+              child: const Align(
+                alignment: Alignment(-0.8, 0.5), // 텍스트 위치 미세 조정
                 child: Text(
                   '메뉴',
-                  style: TextStyle(color: Colors.white, fontSize: 24),
+                  style: TextStyle(
+                    color: Colors.white,
+                    fontSize: 20, // 폰트 크기 축소
+                    fontWeight: FontWeight.bold,
+                  ),
                 ),
               ),
             ),
+            const SizedBox(height: 10), // 메뉴 아이템 간 상단 여백
             ListTile(
               leading: const Icon(
                 Icons.support_agent_rounded,
                 color: AppColors.darkGray,
               ),
-              title: const Text('문의하기'),
-              // ✨✨✨ 바로 이 부분입니다! ✨✨✨
+              // ✨ [UI 수정 1] ListTile 텍스트 스타일 적용
+              title: Text(
+                '문의하기',
+                style: AppTextStyle.medium.copyWith(fontSize: 15),
+              ),
               onTap: () {
-                Navigator.pop(context); // 메뉴 닫기
-                // InquiryListScreen으로 이동하도록 수정
+                Navigator.pop(context);
                 Navigator.of(context).push(
                   MaterialPageRoute(
                     builder: (context) => const InquiryListScreen(),
@@ -103,7 +117,11 @@ class ProfileScreen extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
-              title: const Text('로그아웃'),
+              // ✨ [UI 수정 1] ListTile 텍스트 스타일 적용
+              title: Text(
+                '로그아웃',
+                style: AppTextStyle.medium.copyWith(fontSize: 15),
+              ),
               onTap: () {
                 Navigator.pop(context);
                 ref.read(authNotifierProvider.notifier).logout();
@@ -115,18 +133,50 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
       body: RefreshIndicator(
-        onRefresh: () => profileNotifier.loadUserProfile(),
+        onRefresh: () async {
+          await profileNotifier.loadUserProfile();
+          ref.refresh(recentRecycleHistoryProvider); // 수정된 Provider 사용
+        },
         color: AppColors.primary,
         child: profileState.when(
           initial: () => _buildLoadingIndicator(),
           loading: () => _buildLoadingIndicator(),
           loaded:
-              (userProfile, authLogs) => _buildProfileView(
-                context,
-                userProfile,
-                authLogs,
-                navigateToEditScreen,
-                cardAndDividerColor,
+              (userProfile) => ListView(
+                padding: const EdgeInsets.symmetric(
+                  horizontal: 16.0,
+                  vertical: 16.0,
+                ),
+                children: <Widget>[
+                  _buildProfileCard(
+                    context,
+                    userProfile,
+                    navigateToEditScreen,
+                    cardAndDividerColor,
+                  ),
+                  // ✨ [UI 수정 2] 사라졌던 구분선(Divider) 다시 추가
+                  const Padding(
+                    padding: EdgeInsets.symmetric(vertical: 16.0),
+                    child: Divider(
+                      height: 1,
+                      thickness: 1,
+                      color: cardAndDividerColor,
+                    ),
+                  ),
+                  Text(
+                    '인증 기록', // '인증 기록' -> '최근 인증 기록'으로 텍스트 수정
+                    style: AppTextStyle.bold.copyWith(fontSize: 18),
+                  ),
+                  const SizedBox(height: 8),
+                  historyState.when(
+                    data:
+                        (historyData) => _buildHistoryList(historyData.content),
+                    loading: () => _buildLoadingIndicator(),
+                    error:
+                        (error, stack) =>
+                            Center(child: Text('인증 기록을 불러오지 못했습니다.\n$error')),
+                  ),
+                ],
               ),
           error:
               (message, previousProfile) => _buildErrorView(
@@ -139,6 +189,22 @@ class ProfileScreen extends ConsumerWidget {
     );
   }
 
+  // --- 이하 위젯 빌더 함수들은 변경사항 없습니다 ---
+
+  Widget _buildHistoryList(List<RecycleListItem> items) {
+    if (items.isEmpty) {
+      return const Center(
+        child: Padding(
+          padding: EdgeInsets.all(32.0),
+          child: Text('표시할 인증 기록이 없습니다.', style: TextStyle(color: Colors.grey)),
+        ),
+      );
+    }
+    return Column(
+      children: [for (final item in items) _RecycleHistoryItem(item: item)],
+    );
+  }
+
   Widget _buildDrawerFooter() {
     return Consumer(
       builder: (context, ref, child) {
@@ -147,7 +213,6 @@ class ProfileScreen extends ConsumerWidget {
           color: Colors.grey[600],
           fontSize: 12,
         );
-
         void showComingSoonSnackBar(String featureName) {
           ScaffoldMessenger.of(
             context,
@@ -191,65 +256,6 @@ class ProfileScreen extends ConsumerWidget {
           ),
         );
       },
-    );
-  }
-
-  // ... 이하 다른 메서드들은 변경 없습니다 ...
-  Widget _buildProfileView(
-    BuildContext context,
-    UserProfileModel profile,
-    List<AuthLogRes> authLogs,
-    Function(UserProfileModel) navigateToEditScreen,
-    Color cardAndDividerColor,
-  ) {
-    return ListView(
-      padding: const EdgeInsets.symmetric(horizontal: 16.0, vertical: 16.0),
-      children: <Widget>[
-        _buildProfileCard(
-          context,
-          profile,
-          navigateToEditScreen,
-          cardAndDividerColor,
-        ),
-        Padding(
-          padding: const EdgeInsets.symmetric(vertical: 24.0),
-          child: Divider(height: 1, thickness: 1, color: cardAndDividerColor),
-        ),
-        const Padding(
-          padding: EdgeInsets.only(bottom: 16.0),
-          child: Text('인증 기록', style: AppTextStyle.bold),
-        ),
-        _buildAuthHistoryList(context, authLogs, cardAndDividerColor),
-      ],
-    );
-  }
-
-  Widget _buildAuthHistoryList(
-    BuildContext context,
-    List<AuthLogRes> logs,
-    Color cardColor,
-  ) {
-    if (logs.isEmpty) {
-      return const Center(
-        child: Padding(
-          padding: EdgeInsets.symmetric(vertical: 40.0),
-          child: Text('아직 인증 기록이 없습니다.'),
-        ),
-      );
-    }
-    return Column(
-      children:
-          logs
-              .map(
-                (log) => _buildHistoryItem(
-                  context,
-                  date: '${log.date} ${log.time}',
-                  place: log.location,
-                  success: log.success,
-                  cardColor: cardColor,
-                ),
-              )
-              .toList(),
     );
   }
 
@@ -339,7 +345,6 @@ class ProfileScreen extends ConsumerWidget {
       color: Colors.black54,
     );
     const double profileImageSize = 80.0;
-
     return Card(
       margin: const EdgeInsets.only(bottom: 16.0),
       elevation: 0,
@@ -413,52 +418,139 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
+}
 
-  Widget _buildHistoryItem(
-    BuildContext context, {
-    required String date,
-    required String place,
-    required bool success,
-    required Color cardColor,
-  }) {
-    final TextStyle historyTitleStyle = AppTextStyle.medium.copyWith(
-      fontSize: 14,
-      color: Colors.black87,
+class _RecycleHistoryItem extends ConsumerStatefulWidget {
+  final RecycleListItem item;
+  const _RecycleHistoryItem({required this.item});
+
+  @override
+  ConsumerState<_RecycleHistoryItem> createState() =>
+      __RecycleHistoryItemState();
+}
+
+class __RecycleHistoryItemState extends ConsumerState<_RecycleHistoryItem> {
+  bool _isExpanded = false;
+
+  @override
+  Widget build(BuildContext context) {
+    final item = widget.item;
+
+    return Card(
+      margin: const EdgeInsets.symmetric(vertical: 4.0),
+      elevation: 0,
+      color: const Color(0xFFF3F4F5),
+      shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(12.0)),
+      child: ExpansionTile(
+        tilePadding: const EdgeInsets.symmetric(
+          horizontal: 16.0,
+          vertical: 8.0,
+        ),
+        onExpansionChanged: (isExpanding) {
+          setState(() {
+            _isExpanded = isExpanding;
+          });
+        },
+        leading: Icon(
+          item.result ? Icons.check_circle_rounded : Icons.cancel_rounded,
+          color: item.result ? AppColors.primary : Colors.redAccent,
+          size: 28,
+        ),
+        title: Text(
+          '날짜: ${DateFormat('yyyy/MM/dd').format(item.takenAt)}',
+          style: AppTextStyle.medium.copyWith(
+            fontSize: 14,
+            color: Colors.black87,
+          ),
+        ),
+        subtitle: Text(
+          '장소: ${item.binLocation}',
+          style: AppTextStyle.regular.copyWith(
+            fontSize: 12,
+            color: Colors.grey[700],
+          ),
+        ),
+        trailing: Icon(_isExpanded ? Icons.expand_less : Icons.expand_more),
+        children: [if (_isExpanded) _buildExpandedContent(item.id)],
+      ),
     );
-    final TextStyle historySubTitleStyle = AppTextStyle.regular.copyWith(
-      fontSize: 12,
-      color: Colors.grey[700],
+  }
+
+  Widget _buildExpandedContent(int id) {
+    final detailState = ref.watch(recycleDetailProvider(id));
+    return Container(
+      padding: const EdgeInsets.fromLTRB(16, 0, 16, 16),
+      width: double.infinity,
+      child: detailState.when(
+        data:
+            (detail) => Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (detail.recordImgPath.isNotEmpty)
+                  Padding(
+                    padding: const EdgeInsets.only(top: 8.0, bottom: 12.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      child: Image.network(
+                        detail.recordImgPath,
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder:
+                            (context, error, stackTrace) => Container(
+                              height: 150,
+                              color: Colors.grey.shade300,
+                              child: const Center(child: Text('이미지 로딩 실패')),
+                            ),
+                        loadingBuilder: (context, child, loadingProgress) {
+                          if (loadingProgress == null) return child;
+                          return Container(
+                            height: 150,
+                            color: Colors.grey.shade300,
+                            child: const Center(
+                              child: CircularProgressIndicator(
+                                color: AppColors.primary,
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                _buildDetailRow(
+                  '시각',
+                  DateFormat('HH:mm:ss').format(detail.takenAt),
+                ),
+                _buildDetailRow('인증 결과', detail.result ? '성공' : '실패'),
+              ],
+            ),
+        loading:
+            () => const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(
+                child: CircularProgressIndicator(color: AppColors.primary),
+              ),
+            ),
+        error:
+            (error, stack) => Padding(
+              padding: const EdgeInsets.all(16.0),
+              child: Center(child: Text('상세 정보를 불러올 수 없습니다.')),
+            ),
+      ),
     );
+  }
+
+  Widget _buildDetailRow(String title, String value) {
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 4.0),
-      child: Card(
-        elevation: 0,
-        color: cardColor,
-        shape: RoundedRectangleBorder(
-          borderRadius: BorderRadius.circular(12.0),
-        ),
-        child: ListTile(
-          leading: Icon(
-            success ? Icons.check_circle_rounded : Icons.cancel_rounded,
-            color: success ? AppColors.primary : Colors.redAccent,
-            size: 28,
+      child: Row(
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+        children: [
+          Text(
+            title,
+            style: AppTextStyle.regular.copyWith(color: Colors.grey[700]),
           ),
-          title: Text('날짜: $date', style: historyTitleStyle),
-          subtitle: Text('장소: $place', style: historySubTitleStyle),
-          trailing: Icon(
-            Icons.arrow_forward_ios_rounded,
-            size: 16,
-            color: Colors.grey[400],
-          ),
-          onTap:
-              () => ScaffoldMessenger.of(
-                context,
-              ).showSnackBar(SnackBar(content: Text('$date 기록 상세 보기 (구현 예정)'))),
-          contentPadding: const EdgeInsets.symmetric(
-            vertical: 6.0,
-            horizontal: 16.0,
-          ),
-        ),
+          Text(value, style: AppTextStyle.medium),
+        ],
       ),
     );
   }
