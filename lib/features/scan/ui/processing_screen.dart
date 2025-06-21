@@ -1,20 +1,21 @@
+// lib/features/scan/ui/processing_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:primero/features/scan/providers/scan_provider.dart';
 import 'package:primero/features/scan/ui/result_screen.dart';
 
+// ✨ 타이머 관리를 위해 ConsumerStatefulWidget으로 변경
 class ProcessingScreen extends ConsumerStatefulWidget {
   final String barcode;
   final bool isSuccessCase;
   final Function(int) onItemTapped;
-  final bool isTestMode;
 
   const ProcessingScreen({
     super.key,
     required this.barcode,
     required this.isSuccessCase,
     required this.onItemTapped,
-    this.isTestMode = false,
   });
 
   @override
@@ -22,45 +23,35 @@ class ProcessingScreen extends ConsumerStatefulWidget {
 }
 
 class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
+  // --- 발표용 임시 코드 ---
+  Timer? _timer;
+
   @override
   void initState() {
     super.initState();
-    if (!widget.isTestMode) {
-      WidgetsBinding.instance.addPostFrameCallback((_) {
-        _executeScanAndNavigate();
-      });
-    }
+    // 5초 후에 결과 화면으로 자동 전환하는 타이머 설정
+    _timer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (context) => ResultScreen(
+                  isSuccess: widget.isSuccessCase,
+                  onItemTapped: widget.onItemTapped,
+                ),
+          ),
+        );
+      }
+    });
   }
 
-  Future<void> _executeScanAndNavigate() async {
-    bool apiCallSuccess;
-    try {
-      await ref
-          .read(scanRepositoryProvider)
-          .logScanResult(
-            barcode: widget.barcode,
-            success: widget.isSuccessCase,
-            location: "Inha University",
-          );
-      apiCallSuccess = widget.isSuccessCase;
-    } catch (e) {
-      debugPrint("Scan log API failed: $e");
-      apiCallSuccess = false;
-    }
-
-    if (mounted) {
-      Navigator.pushReplacement(
-        context,
-        MaterialPageRoute(
-          builder:
-              (context) => ResultScreen(
-                isSuccess: apiCallSuccess,
-                onItemTapped: widget.onItemTapped,
-              ),
-        ),
-      );
-    }
+  @override
+  void dispose() {
+    _timer?.cancel(); // 화면이 없어질 때 타이머 정리
+    super.dispose();
   }
+  // --- 여기까지 ---
 
   @override
   Widget build(BuildContext context) {
@@ -86,16 +77,15 @@ class _ProcessingScreenState extends ConsumerState<ProcessingScreen> {
                     ),
                   ),
                 ),
-                Expanded(
+                const Expanded(
                   child: Center(
                     child: Column(
-                      mainAxisAlignment: MainAxisAlignment.start, // 변경
+                      mainAxisAlignment: MainAxisAlignment.start,
                       children: [
                         const SizedBox(height: 250),
-
-                        const CircularProgressIndicator(color: Colors.black),
-                        const SizedBox(height: 24),
-                        const Text(
+                        CircularProgressIndicator(color: Colors.black),
+                        SizedBox(height: 24),
+                        Text(
                           "AI가 플라스틱을 분석중입니다...",
                           style: TextStyle(color: Colors.black, fontSize: 18),
                         ),

@@ -11,7 +11,6 @@ part 'auth_remote_data_source.g.dart';
 
 @RestApi(baseUrl: "http://localhost:8080")
 abstract class AuthRemoteDataSource {
-  // ✨ 수정: errorLogger 파라미터 제거
   factory AuthRemoteDataSource(Dio dio, {String baseUrl}) =
       _AuthRemoteDataSource;
 
