@@ -12,7 +12,6 @@ import 'package:primero/features/profile/providers/profile_di.dart';
 import 'package:primero/features/profile/providers/recycle_history_provider.dart';
 import 'package:primero/features/profile/ui/screens/profile_edit_screen.dart';
 
-// 버전 정보를 위한 Provider
 final packageInfoProvider = FutureProvider.autoDispose<PackageInfo>((
   ref,
 ) async {
@@ -28,11 +27,10 @@ class ProfileScreen extends ConsumerWidget {
   @override
   Widget build(BuildContext context, WidgetRef ref) {
     final profileState = ref.watch(profileNotifierProvider);
-    // --- 발표용 임시 코드 ---
-    // 실제 API를 호출하는 코드를 주석 처리합니다.
-    // final historyState = ref.watch(recentRecycleHistoryProvider);
-    // --- 여기까지 ---
     final profileNotifier = ref.read(profileNotifierProvider.notifier);
+
+    // ✨ [복원] 실제 분리수거 기록 데이터를 API로 호출합니다.
+    final historyState = ref.watch(recentRecycleHistoryProvider);
     const Color cardAndDividerColor = Color(0xFFF3F4F5);
 
     void navigateToEditScreen(UserProfileModel profile) {
@@ -42,27 +40,6 @@ class ProfileScreen extends ConsumerWidget {
         ),
       );
     }
-
-    final List<RecycleListItem> dummyHistory = [
-      RecycleListItem(
-        id: 101,
-        result: true,
-        takenAt: DateTime.now().subtract(const Duration(days: 1)),
-        binLocation: '5호관 남문',
-      ),
-      RecycleListItem(
-        id: 102,
-        result: false,
-        takenAt: DateTime.now().subtract(const Duration(days: 3)),
-        binLocation: '비룡플라자 1층',
-      ),
-      RecycleListItem(
-        id: 103,
-        result: true,
-        takenAt: DateTime.now().subtract(const Duration(days: 5)),
-        binLocation: '60주년 기념관',
-      ),
-    ];
 
     return Scaffold(
       backgroundColor: Colors.white,
@@ -100,30 +77,28 @@ class ProfileScreen extends ConsumerWidget {
       endDrawer: Drawer(
         child: Column(
           children: [
-            // ✨ [UI 수정 1] DrawerHeader를 좀 더 간결하게 수정
             Container(
               width: double.infinity,
-              height: 120, // 높이를 줄여 공간 확보
+              height: 120,
               color: AppColors.primary,
               child: const Align(
-                alignment: Alignment(-0.8, 0.5), // 텍스트 위치 미세 조정
+                alignment: Alignment(-0.8, 0.5),
                 child: Text(
                   '메뉴',
                   style: TextStyle(
                     color: Colors.white,
-                    fontSize: 20, // 폰트 크기 축소
+                    fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
               ),
             ),
-            const SizedBox(height: 10), // 메뉴 아이템 간 상단 여백
+            const SizedBox(height: 10),
             ListTile(
               leading: const Icon(
                 Icons.support_agent_rounded,
                 color: AppColors.darkGray,
               ),
-              // ✨ [UI 수정 1] ListTile 텍스트 스타일 적용
               title: Text(
                 '문의하기',
                 style: AppTextStyle.medium.copyWith(fontSize: 15),
@@ -139,7 +114,6 @@ class ProfileScreen extends ConsumerWidget {
             ),
             ListTile(
               leading: const Icon(Icons.logout, color: Colors.redAccent),
-              // ✨ [UI 수정 1] ListTile 텍스트 스타일 적용
               title: Text(
                 '로그아웃',
                 style: AppTextStyle.medium.copyWith(fontSize: 15),
@@ -155,9 +129,10 @@ class ProfileScreen extends ConsumerWidget {
         ),
       ),
       body: RefreshIndicator(
+        // ✨ [복원] 새로고침 시 인증 기록도 함께 새로고침합니다.
         onRefresh: () async {
           await profileNotifier.loadUserProfile();
-          // ref.refresh(recentRecycleHistoryProvider); // API 호출이므로 주석 처리
+          ref.refresh(recentRecycleHistoryProvider);
         },
         color: AppColors.primary,
         child: profileState.when(
@@ -181,7 +156,7 @@ class ProfileScreen extends ConsumerWidget {
                     child: Divider(
                       height: 1,
                       thickness: 1,
-                      color: cardAndDividerColor,
+                      color: Color.fromARGB(255, 230, 229, 229),
                     ),
                   ),
                   Text(
@@ -189,18 +164,15 @@ class ProfileScreen extends ConsumerWidget {
                     style: AppTextStyle.bold.copyWith(fontSize: 18),
                   ),
                   const SizedBox(height: 8),
-                  // --- 발표용 임시 코드 ---
-                  // historyState.when 대신, 직접 만든 가짜 데이터로 리스트를 구성합니다.
-                  _buildHistoryList(dummyHistory),
-                  // historyState.when(
-                  //   data:
-                  //       (historyData) => _buildHistoryList(historyData.content),
-                  //   loading: () => _buildLoadingIndicator(),
-                  //   error:
-                  //       (error, stack) =>
-                  //           Center(child: Text('인증 기록을 불러오지 못했습니다.\n$error')),
-                  // ),
-                  _buildHistoryList(dummyHistory),
+                  // ✨ [복원] API의 상태(data, loading, error)에 따라 UI를 표시합니다.
+                  historyState.when(
+                    data:
+                        (historyData) => _buildHistoryList(historyData.content),
+                    loading: () => _buildLoadingIndicator(),
+                    error:
+                        (error, stack) =>
+                            Center(child: Text('인증 기록을 불러오지 못했습니다.\n$error')),
+                  ),
                 ],
               ),
           error:
@@ -213,8 +185,6 @@ class ProfileScreen extends ConsumerWidget {
       ),
     );
   }
-
-  // --- 이하 위젯 빌더 함수들은 변경사항 없습니다 ---
 
   Widget _buildHistoryList(List<RecycleListItem> items) {
     if (items.isEmpty) {
@@ -496,52 +466,78 @@ class __RecycleHistoryItemState extends ConsumerState<_RecycleHistoryItem> {
         trailing: Icon(Icons.expand_more, key: ValueKey(item.id)),
         children: <Widget>[
           const Divider(height: 1, thickness: 0.5, color: Colors.grey),
-          _buildExpandedContent(item),
+          // ✨ [복원] 상세 정보 API를 호출하도록 변경
+          _buildExpandedContent(item.id),
         ],
       ),
     );
   }
 
-  // --- 발표용 임시 코드 ---
-  Widget _buildExpandedContent(RecycleListItem item) {
+  // ✨ [복원] 실제 상세 정보 API를 호출하여 UI를 그리는 코드로 복원
+  Widget _buildExpandedContent(int id) {
+    // API를 호출하여 상세 정보를 가져옵니다.
+    final detailState = ref.watch(recycleDetailProvider(id));
     return Container(
       padding: const EdgeInsets.fromLTRB(16, 12, 16, 16),
       width: double.infinity,
-      child: Column(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Center(
-            child: Container(
-              width: 250,
-              height: 200,
-              margin: const EdgeInsets.only(bottom: 16.0),
-              decoration: BoxDecoration(
-                // ✨ [UI 수정] 이미지 컨테이너의 배경색을 투명하게 만들어 흰색 배경을 없앱니다.
-                color: Colors.transparent,
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Center(
-                child: Image.asset(
-                  'assets/images/recycle.png',
-                  fit: BoxFit.contain,
-                  errorBuilder: (context, error, stackTrace) {
-                    return const Text(
-                      '인증 화면',
-                      style: TextStyle(color: Colors.grey),
-                    );
-                  },
+      child: detailState.when(
+        data:
+            (detail) => Column(
+              // 실제 데이터로 UI 구성
+              //child: Image.network(
+              //detail.recordImgPath,
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                if (detail
+                    .recordImgPath
+                    .isNotEmpty) // 이 조건은 유지하여, 실제 데이터가 있을 때만 이미지를 표시하도록 합니다.
+                  Padding(
+                    padding: const EdgeInsets.only(bottom: 12.0),
+                    child: ClipRRect(
+                      borderRadius: BorderRadius.circular(8),
+                      // ✨ Image.network를 Image.asset으로 변경하고 경로를 지정합니다.
+                      child: Image.asset(
+                        'assets/images/recycle.png', // 요청하신 임시 이미지 경로
+                        width: double.infinity,
+                        fit: BoxFit.cover,
+                        height: 200,
+                        // 로컬 이미지가 없을 경우를 대비한 errorBuilder
+                        errorBuilder: (context, error, stackTrace) {
+                          return Container(
+                            height: 200,
+                            color: Colors.grey.shade300,
+                            child: const Center(
+                              child: Text(
+                                '이미지를 표시할 수 없습니다.',
+                                style: TextStyle(color: Colors.grey),
+                              ),
+                            ),
+                          );
+                        },
+                      ),
+                    ),
+                  ),
+                _buildDetailRow(
+                  '시각',
+                  DateFormat('HH:mm:ss').format(detail.takenAt),
                 ),
-              ),
+                const SizedBox(height: 4),
+                _buildDetailRow('인증 결과', detail.result ? '성공' : '실패'),
+              ],
             ),
-          ),
-          _buildDetailRow('시각', DateFormat('HH:mm').format(item.takenAt)),
-          const SizedBox(height: 4),
-          _buildDetailRow('인증 결과', item.result ? 'Success!' : 'Failure'),
-        ],
+        loading:
+            () => const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: CircularProgressIndicator()),
+            ),
+        error:
+            (error, stack) => const Padding(
+              padding: EdgeInsets.all(16.0),
+              child: Center(child: Text('상세 정보를 불러올 수 없습니다.')),
+            ),
       ),
     );
   }
-  // --- 여기까지 ---
 
   Widget _buildDetailRow(String title, String value) {
     return Padding(

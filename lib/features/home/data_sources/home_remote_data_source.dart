@@ -5,7 +5,7 @@ import 'package:primero/features/home/models/character_info_model.dart';
 
 part 'home_remote_data_source.g.dart';
 
-@RestApi(baseUrl: "http://localhost:8080")
+@RestApi(baseUrl: "http://35.216.76.60:8080")
 abstract class HomeRemoteDataSource {
   factory HomeRemoteDataSource(Dio dio, {String baseUrl}) =
       _HomeRemoteDataSource;

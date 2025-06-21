@@ -5,7 +5,7 @@ import 'package:primero/features/tree_map/models/tree_model.dart';
 part 'tree_map_remote_data_source.g.dart';
 
 // HomeRemoteDataSource와 동일한 방식으로 baseUrl을 여기에 명시합니다.
-@RestApi(baseUrl: "http://localhost:8080")
+@RestApi(baseUrl: "http://35.216.76.60:8080")
 abstract class TreeMapRemoteDataSource {
   factory TreeMapRemoteDataSource(Dio dio, {String baseUrl}) =
       _TreeMapRemoteDataSource;

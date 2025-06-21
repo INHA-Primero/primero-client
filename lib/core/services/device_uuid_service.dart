@@ -16,8 +16,7 @@ class DeviceUuidService {
     String? deviceUuid = await _secureStorage.read(key: _deviceUuidKey);
 
     if (deviceUuid == null || deviceUuid.isEmpty) {
-      // 저장된 UUID가 없으면 새로 생성
-      deviceUuid = _uuid.v4(); // Version 4 UUID 생성
+      deviceUuid = _uuid.v4();
       await _secureStorage.write(key: _deviceUuidKey, value: deviceUuid);
       print('New device_uuid created and saved: $deviceUuid');
     } else {
