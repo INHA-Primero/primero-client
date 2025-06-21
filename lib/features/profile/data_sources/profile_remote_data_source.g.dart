@@ -155,19 +155,25 @@ class _ProfileRemoteDataSource implements ProfileRemoteDataSource {
   }
 
   @override
-  Future<List<AuthLogRes>> getAuthLogs(int userId) async {
+  Future<PageRecycleListResponse> getRecycleHistory({
+    required int page,
+    required int size,
+  }) async {
     final _extra = <String, dynamic>{};
-    final queryParameters = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{
+      r'page': page,
+      r'size': size,
+    };
     final _headers = <String, dynamic>{};
     const Map<String, dynamic>? _data = null;
-    final _options = _setStreamType<List<AuthLogRes>>(Options(
+    final _options = _setStreamType<PageRecycleListResponse>(Options(
       method: 'GET',
       headers: _headers,
       extra: _extra,
     )
         .compose(
           _dio.options,
-          '/api/barcode/log/${userId}',
+          '/api/v1/recycles',
           queryParameters: queryParameters,
           data: _data,
         )
@@ -176,12 +182,43 @@ class _ProfileRemoteDataSource implements ProfileRemoteDataSource {
           _dio.options.baseUrl,
           baseUrl,
         )));
-    final _result = await _dio.fetch<List<dynamic>>(_options);
-    late List<AuthLogRes> _value;
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late PageRecycleListResponse _value;
     try {
-      _value = _result.data!
-          .map((dynamic i) => AuthLogRes.fromJson(i as Map<String, dynamic>))
-          .toList();
+      _value = PageRecycleListResponse.fromJson(_result.data!);
+    } on Object catch (e, s) {
+      errorLogger?.logError(e, s, _options);
+      rethrow;
+    }
+    return _value;
+  }
+
+  @override
+  Future<RecycleDetail> getRecycleDetail({required int id}) async {
+    final _extra = <String, dynamic>{};
+    final queryParameters = <String, dynamic>{};
+    final _headers = <String, dynamic>{};
+    const Map<String, dynamic>? _data = null;
+    final _options = _setStreamType<RecycleDetail>(Options(
+      method: 'GET',
+      headers: _headers,
+      extra: _extra,
+    )
+        .compose(
+          _dio.options,
+          '/api/v1/recycles/${id}',
+          queryParameters: queryParameters,
+          data: _data,
+        )
+        .copyWith(
+            baseUrl: _combineBaseUrls(
+          _dio.options.baseUrl,
+          baseUrl,
+        )));
+    final _result = await _dio.fetch<Map<String, dynamic>>(_options);
+    late RecycleDetail _value;
+    try {
+      _value = RecycleDetail.fromJson(_result.data!);
     } on Object catch (e, s) {
       errorLogger?.logError(e, s, _options);
       rethrow;

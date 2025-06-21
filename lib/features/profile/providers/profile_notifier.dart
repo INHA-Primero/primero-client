@@ -1,14 +1,15 @@
-// lib/features/profile/providers/profile_notifier.dart
-
-import 'dart:io';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:primero/features/home/providers/home_di.dart';
+import 'package:primero/features/home/repositories/home_repository.dart';
 import '../repositories/profile_repository.dart';
 import 'profile_state.dart';
 
 class ProfileNotifier extends StateNotifier<ProfileState> {
   final ProfileRepository _profileRepository;
+  final HomeRepository _homeRepository;
+  final Ref _ref;
 
-  ProfileNotifier(this._profileRepository)
+  ProfileNotifier(this._profileRepository, this._homeRepository, this._ref)
     : super(const ProfileState.initial()) {
     loadUserProfile();
   }
@@ -16,33 +17,32 @@ class ProfileNotifier extends StateNotifier<ProfileState> {
   Future<void> loadUserProfile() async {
     state = const ProfileState.loading();
     try {
-      // 1. 사용자 프로필 정보를 먼저 가져옵니다.
+      // getAuthLogs 호출 로직 제거
       final userProfile = await _profileRepository.getUserProfile();
-      // 2. 가져온 프로필의 userId를 사용하여 인증 기록을 가져옵니다.
-      final authLogs = await _profileRepository.getAuthLogs(userProfile.userId);
-      // 3. 두 데이터를 모두 포함하여 `loaded` 상태로 변경합니다.
-      state = ProfileState.loaded(userProfile, authLogs);
+      state = ProfileState.loaded(userProfile);
     } catch (e) {
       state = ProfileState.error(e.toString());
     }
   }
 
-  Future<bool> updateProfileData({
-    required String newNickname,
-    File? newImageFile,
-  }) async {
+  Future<bool> updateProfileData({required String newNickname}) async {
     final currentState = state;
     if (currentState is! ProfileLoaded) return false;
 
     final user = currentState.userProfile;
-    state = const ProfileState.loading();
+    state = ProfileState.loading();
     try {
-      await _profileRepository.updateUserProfile(
-        userId: user.userId,
-        newTreeName: newNickname,
-        newImageFile: newImageFile,
-      );
-      await loadUserProfile(); // 성공 후 최신 정보 다시 로드
+      await Future.wait([
+        _profileRepository.updateUserProfile(
+          userId: user.userId,
+          newTreeName: newNickname,
+        ),
+        _homeRepository.updateNickname(newNickname),
+      ]);
+
+      await loadUserProfile();
+      _ref.read(homeNotifierProvider.notifier).fetchHomeData();
+
       return true;
     } catch (e) {
       state = ProfileState.error(e.toString(), previousProfile: user);

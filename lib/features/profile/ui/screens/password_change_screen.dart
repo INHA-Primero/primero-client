@@ -36,7 +36,7 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
     super.dispose();
   }
 
-  // [수정] Notifier 함수를 호출하고 결과를 직접 처리
+  // ✨ [수정됨] _submitChangePassword 메서드에서 성공 SnackBar 호출부 삭제
   Future<void> _submitChangePassword() async {
     if (_formKey.currentState!.validate()) {
       FocusScope.of(context).unfocus();
@@ -48,15 +48,11 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
 
       if (mounted) {
         if (success) {
-          ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('비밀번호가 성공적으로 변경되었습니다.'),
-              backgroundColor: AppColors.primary,
-            ),
-          );
           // 딜레이 후 화면 닫기
           Future.delayed(const Duration(milliseconds: 500), () {
-            if (mounted && Navigator.canPop(context)) Navigator.pop(context);
+            if (mounted && Navigator.canPop(context)) {
+              Navigator.pop(context);
+            }
           });
         } else {
           final currentState = ref.read(profileNotifierProvider);
@@ -140,8 +136,12 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                       () => _obscureNewPassword = !_obscureNewPassword,
                     ),
                 validator: (value) {
-                  if (value == null || value.isEmpty) return '새 비밀번호를 입력해주세요.';
-                  if (value.length < 6) return '비밀번호는 6자 이상이어야 합니다.';
+                  if (value == null || value.isEmpty) {
+                    return '새 비밀번호를 입력해주세요.';
+                  }
+                  if (value.length < 6) {
+                    return '비밀번호는 6자 이상이어야 합니다.';
+                  }
                   return null;
                 },
               ),
@@ -157,10 +157,12 @@ class _PasswordChangeScreenState extends ConsumerState<PasswordChangeScreen> {
                               !_obscureConfirmNewPassword,
                     ),
                 validator: (value) {
-                  if (value == null || value.isEmpty)
+                  if (value == null || value.isEmpty) {
                     return '새 비밀번호를 다시 한번 입력해주세요.';
-                  if (value != _newPasswordController.text)
+                  }
+                  if (value != _newPasswordController.text) {
                     return '새 비밀번호가 일치하지 않습니다.';
+                  }
                   return null;
                 },
               ),

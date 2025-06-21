@@ -24,10 +24,8 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   final _formKey = GlobalKey<FormState>();
   File? _pickedImageFile;
   dynamic _displayImageSource;
-  // [수정] 기본 이미지 경로를 일관성 있게 관리하기 위해 babyTree2.png로 수정
-  static const String _defaultProfileAsset = 'assets/images/babyTree2.png';
+  static const String _defaultProfileAsset = 'assets/images/babyTree.png';
 
-  // [수정] 로딩 상태를 UI에서 직접 관리
   bool _isUpdating = false;
 
   @override
@@ -60,6 +58,12 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   }
 
   Future<void> _pickImageFromGallery() async {
+    // API 명세에 이미지 업로드 기능이 없으므로, 사용자에게 안내 메시지를 표시합니다.
+    ScaffoldMessenger.of(context).showSnackBar(
+      const SnackBar(content: Text('프로필 이미지 변경 기능은 현재 지원되지 않습니다.')),
+    );
+    // 아래 로직은 실행하지 않습니다.
+    /*
     try {
       final XFile? pickedXFile = await ImagePicker().pickImage(
         source: ImageSource.gallery,
@@ -75,33 +79,27 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         ).showSnackBar(SnackBar(content: Text('갤러리에서 이미지를 가져오는 데 실패했습니다: $e')));
       }
     }
+    */
   }
 
-  // [수정] Notifier 함수를 직접 호출하고 결과를 처리하는 로직
+  // ✨ [수정된 부분] _submitUpdate 메서드
   Future<void> _submitUpdate() async {
     if (_formKey.currentState?.validate() ?? false) {
       FocusScope.of(context).unfocus();
       setState(() => _isUpdating = true);
 
+      // ✨ 'newImageFile' 파라미터 전달 로직 삭제
       final success = await ref
           .read(profileNotifierProvider.notifier)
-          .updateProfileData(
-            newNickname: _treeNameController.text.trim(),
-            newImageFile: _pickedImageFile,
-          );
+          .updateProfileData(newNickname: _treeNameController.text.trim());
 
-      // 위젯이 아직 화면에 마운트되어 있는지 확인 후 UI 업데이트
       if (mounted) {
         if (success) {
           ScaffoldMessenger.of(context).showSnackBar(
-            const SnackBar(
-              content: Text('프로필이 성공적으로 업데이트되었습니다.'),
-              backgroundColor: AppColors.primary,
-            ),
+            const SnackBar(content: Text('프로필이 성공적으로 업데이트되었습니다.')),
           );
           Navigator.pop(context); // 성공 시 이전 화면으로 이동
         } else {
-          // 실패 시 Notifier가 error 상태로 전환했으므로, 그 상태를 읽어 메시지 표시
           final currentState = ref.read(profileNotifierProvider);
           final errorMessage = currentState.maybeWhen(
             error: (msg, _) => msg,
@@ -126,7 +124,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   }
 
   Widget _buildReadOnlyField(String label, String value, {IconData? icon}) {
-    // ... (이 위젯은 변경 없음)
     return Padding(
       padding: const EdgeInsets.symmetric(vertical: 8.0),
       child: TextFormField(
@@ -157,8 +154,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
 
   @override
   Widget build(BuildContext context) {
-    // [삭제] ref.listen은 더 이상 필요 없습니다.
-
     ImageProvider displayImageProvider;
     if (_displayImageSource is File) {
       displayImageProvider = FileImage(_displayImageSource as File);
@@ -176,7 +171,6 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
         backgroundColor: Colors.white,
         foregroundColor: Colors.black,
         actions: [
-          // [수정] 로딩 상태를 _isUpdating 변수로 제어
           if (_isUpdating)
             const Padding(
               padding: EdgeInsets.only(right: 16.0),
@@ -283,8 +277,9 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
                 ),
                 style: AppTextStyle.regular,
                 validator: (value) {
-                  if (value == null || value.trim().isEmpty)
+                  if (value == null || value.trim().isEmpty) {
                     return '나무 이름을 입력해주세요.';
+                  }
                   return null;
                 },
               ),

@@ -58,8 +58,7 @@ class ScanScreen extends ConsumerWidget {
                     child: CircularProgressIndicator(color: Colors.white),
                   ),
               // ✨✨✨ 오류 수정: (userProfile, authLogs) 두 개의 파라미터를 받도록 수정 ✨✨✨
-              loaded: (userProfile, authLogs) {
-                // authLogs는 이 화면에서 사용하지 않으므로 무시합니다.
+              loaded: (userProfile) {
                 final barcodeData =
                     'INHA${userProfile.userId.toString().padLeft(8, '0')}';
 
@@ -75,12 +74,18 @@ class ScanScreen extends ConsumerWidget {
                             color: Colors.black,
                             size: 30,
                           ),
-                          onPressed: () => onItemTapped(0),
+                          onPressed: () {
+                            if (Navigator.canPop(context)) {
+                              Navigator.pop(context);
+                            }
+                            onItemTapped(0);
+                          },
                         ),
                       ),
                     ),
                     Expanded(
                       child: Column(
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           const SizedBox(height: 10),
                           const Image(
@@ -107,21 +112,16 @@ class ScanScreen extends ConsumerWidget {
                               drawText: false,
                             ),
                           ),
-                          const Spacer(),
-                          const Padding(
-                            padding: EdgeInsets.only(
-                              bottom: 20.0,
-                            ), // 텍스트가 잘리지 않도록 여백 추가
-                            child: Text(
-                              "바코드 스캐너에 인식시켜주세요!",
-                              style: TextStyle(
-                                // AppTextStyle 대신 기본 TextStyle 사용 (배경 이미지에 따라 가독성 조절)
-                                color: Colors.black87,
-                                fontSize: 20,
-                                fontWeight: FontWeight.w500,
-                              ),
+                          const SizedBox(height: 40),
+                          const Text(
+                            "바코드 스캐너에 인식시켜주세요!",
+                            style: TextStyle(
+                              color: Colors.black87,
+                              fontSize: 20,
+                              fontWeight: FontWeight.w500,
                             ),
                           ),
+                          const Spacer(flex: 2),
                         ],
                       ),
                     ),
@@ -131,7 +131,7 @@ class ScanScreen extends ConsumerWidget {
                         16.0,
                         16.0,
                         32.0,
-                      ), // 하단 여백 추가
+                      ),
                       child: Wrap(
                         alignment: WrapAlignment.center,
                         spacing: 12.0,
@@ -140,11 +140,15 @@ class ScanScreen extends ConsumerWidget {
                           ElevatedButton(
                             child: const Text("임시 성공"),
                             onPressed: () {
-                              _navigateToProcessing(
+                              Navigator.push(
                                 context,
-                                barcodeData,
-                                true, // isSuccess
-                                false, // isTestMode
+                                MaterialPageRoute(
+                                  builder:
+                                      (_) => ResultScreen(
+                                        isSuccess: true,
+                                        onItemTapped: onItemTapped,
+                                      ),
+                                ),
                               );
                             },
                           ),
