@@ -1,6 +1,6 @@
-import 'package:barcode_widget/barcode_widget.dart';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
+import 'package:barcode_widget/barcode_widget.dart';
 import 'package:primero/core/theme/app_text_style.dart';
 import 'package:primero/features/profile/providers/profile_di.dart';
 import 'package:primero/features/scan/ui/processing_screen.dart';
@@ -39,12 +39,25 @@ class ScanScreen extends ConsumerWidget {
       body: Stack(
         fit: StackFit.expand,
         children: [
-          Container(color: Colors.white),
+          Image.asset("assets/images/scan_background.png", fit: BoxFit.cover),
           SafeArea(
             child: profileState.when(
-              initial: () => const Center(child: CircularProgressIndicator()),
-              loading: () => const Center(child: CircularProgressIndicator()),
-              // ✨ 수정된 부분: 이제 loaded 콜백은 userProfile 하나만 받습니다.
+              loading:
+                  () => const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+              error:
+                  (e, s) => Center(
+                    child: Text(
+                      "오류: $e",
+                      style: const TextStyle(color: Colors.white),
+                    ),
+                  ),
+              initial:
+                  () => const Center(
+                    child: CircularProgressIndicator(color: Colors.white),
+                  ),
+              // ✨✨✨ 오류 수정: (userProfile, authLogs) 두 개의 파라미터를 받도록 수정 ✨✨✨
               loaded: (userProfile) {
                 final barcodeData =
                     'INHA${userProfile.userId.toString().padLeft(8, '0')}';
@@ -74,7 +87,7 @@ class ScanScreen extends ConsumerWidget {
                       child: Column(
                         mainAxisAlignment: MainAxisAlignment.center,
                         children: [
-                          const Spacer(),
+                          const SizedBox(height: 10),
                           const Image(
                             image: AssetImage("assets/images/babyTree.png"),
                             width: 60,
@@ -171,9 +184,6 @@ class ScanScreen extends ConsumerWidget {
                   ],
                 );
               },
-              error:
-                  (message, previousProfile) =>
-                      Center(child: Text('프로필을 불러오는 중 오류가 발생했습니다: $message')),
             ),
           ),
         ],

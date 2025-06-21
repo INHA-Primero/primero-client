@@ -24,7 +24,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
   final _formKey = GlobalKey<FormState>();
   File? _pickedImageFile;
   dynamic _displayImageSource;
-  static const String _defaultProfileAsset = 'assets/images/babyTree2.png';
+  static const String _defaultProfileAsset = 'assets/images/babyTree.png';
 
   bool _isUpdating = false;
 
@@ -91,9 +91,7 @@ class _ProfileEditScreenState extends ConsumerState<ProfileEditScreen> {
       // ✨ 'newImageFile' 파라미터 전달 로직 삭제
       final success = await ref
           .read(profileNotifierProvider.notifier)
-          .updateProfileData(
-            newNickname: _treeNameController.text.trim(),
-          );
+          .updateProfileData(newNickname: _treeNameController.text.trim());
 
       if (mounted) {
         if (success) {

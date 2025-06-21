@@ -50,7 +50,7 @@ class HomeScreen extends ConsumerWidget {
               ),
               SafeArea(
                 child: Padding(
-                  padding: const EdgeInsets.symmetric(horizontal: 20.0),
+                  padding: const EdgeInsets.symmetric(horizontal: 10.0),
                   child: Column(
                     crossAxisAlignment: CrossAxisAlignment.start,
                     children: [
@@ -63,14 +63,17 @@ class HomeScreen extends ConsumerWidget {
                       const SizedBox(height: 10),
                       Column(
                         crossAxisAlignment:
-                            CrossAxisAlignment.start, // 자식들을 왼쪽으로 정렬
+                            CrossAxisAlignment.center, // 자식들을 왼쪽으로 정렬
                         children: [
-                          // ✨ UI 수정: 누를 수 없는 작은 파란색 정보 블록
-                          _InfoTextBlock(
-                            label: '${characterInfo.wateringChance}번 물주기 >',
+                          // ✨ [수정] Transform.translate를 사용하여 위젯을 왼쪽으로 이동시킵니다.
+                          Transform.translate(
+                            // offset의 첫 번째 값(x)을 음수로 주면 왼쪽으로 이동합니다.
+                            offset: const Offset(2.0, 0),
+                            child: _InfoTextBlock(
+                              label: '${characterInfo.wateringChance}번 물주기 >',
+                            ),
                           ),
                           const SizedBox(height: 8),
-                          // ✨ UI 수정: 다시 원래의 물주기 아이콘 버튼으로 변경
                           _CustomIconButton(
                             iconData: Icons.water_drop_outlined,
                             onPressed: () {
@@ -125,7 +128,7 @@ class HomeScreen extends ConsumerWidget {
               if (isWatering)
                 Center(
                   child: Transform.scale(
-                    scale: 2.0,
+                    scale: 1.8,
                     child: Lottie.asset(
                       'assets/lottie/watering.json',
                       repeat: false,
