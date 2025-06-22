@@ -4,23 +4,24 @@ import 'package:primero/features/profile/ui/screens/profile_screen.dart';
 import 'package:primero/features/scan/ui/scan_screen.dart';
 import 'custom_bottom_nav_bar.dart';
 
-// 💡 3. 스캔 버튼을 아래로 내리기 위한 오프셋 값을 조정합니다.
 class _CustomFabLocation extends FloatingActionButtonLocation {
   const _CustomFabLocation();
 
   @override
   Offset getOffset(ScaffoldPrelayoutGeometry scaffoldGeometry) {
-    final double fabX = (scaffoldGeometry.scaffoldSize.width - scaffoldGeometry.floatingActionButtonSize.width) / 2;
-    // 숫자를 줄여서 버튼을 더 아래로 내립니다.
-    final double fabY = scaffoldGeometry.scaffoldSize.height 
-                      - scaffoldGeometry.bottomSheetSize.height 
-                      - scaffoldGeometry.floatingActionButtonSize.height
-                      - 30; // 값을 40에서 30으로 줄여서 아래로 이동
-    
+    final double fabX =
+        (scaffoldGeometry.scaffoldSize.width -
+            scaffoldGeometry.floatingActionButtonSize.width) /
+        2;
+    final double fabY =
+        scaffoldGeometry.scaffoldSize.height -
+        scaffoldGeometry.bottomSheetSize.height -
+        scaffoldGeometry.floatingActionButtonSize.height -
+        30;
+
     return Offset(fabX, fabY);
   }
 }
-
 
 class MainScaffold extends StatefulWidget {
   const MainScaffold({super.key});

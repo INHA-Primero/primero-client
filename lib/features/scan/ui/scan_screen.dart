@@ -1,3 +1,5 @@
+// lib/features/scan/ui/scan_screen.dart
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:barcode_widget/barcode_widget.dart';
@@ -6,33 +8,52 @@ import 'package:primero/features/profile/providers/profile_di.dart';
 import 'package:primero/features/scan/ui/processing_screen.dart';
 import 'package:primero/features/scan/ui/result_screen.dart';
 
-class ScanScreen extends ConsumerWidget {
+// ✨ 타이머 관리를 위해 ConsumerStatefulWidget으로 변경
+class ScanScreen extends ConsumerStatefulWidget {
   final Function(int) onItemTapped;
 
   const ScanScreen({super.key, required this.onItemTapped});
 
-  void _navigateToProcessing(
-    BuildContext context,
-    String barcodeData,
-    bool isSuccess,
-    bool isTestMode,
-  ) {
-    Navigator.push(
-      context,
-      MaterialPageRoute(
-        builder:
-            (_) => ProcessingScreen(
-              barcode: barcodeData,
-              isSuccessCase: isSuccess,
-              onItemTapped: onItemTapped,
-              isTestMode: isTestMode,
-            ),
-      ),
-    );
+  @override
+  ConsumerState<ScanScreen> createState() => _ScanScreenState();
+}
+
+class _ScanScreenState extends ConsumerState<ScanScreen> {
+  // --- 발표용 임시 코드 ---
+  Timer? _timer;
+  bool _navigationTriggered = false;
+
+  void _startNavigationTimer(String barcodeData) {
+    // 중복 실행을 방지
+    if (_navigationTriggered) return;
+    _navigationTriggered = true;
+
+    _timer = Timer(const Duration(seconds: 5), () {
+      if (mounted) {
+        Navigator.pushReplacement(
+          context,
+          MaterialPageRoute(
+            builder:
+                (_) => ProcessingScreen(
+                  barcode: barcodeData,
+                  isSuccessCase: true, // 성공 케이스로 설정
+                  onItemTapped: widget.onItemTapped,
+                ),
+          ),
+        );
+      }
+    });
   }
 
   @override
-  Widget build(BuildContext context, WidgetRef ref) {
+  void dispose() {
+    _timer?.cancel(); // 화면이 없어질 때 타이머 정리
+    super.dispose();
+  }
+  // --- 여기까지 ---
+
+  @override
+  Widget build(BuildContext context) {
     final profileState = ref.watch(profileNotifierProvider);
 
     return Scaffold(
@@ -57,10 +78,16 @@ class ScanScreen extends ConsumerWidget {
                   () => const Center(
                     child: CircularProgressIndicator(color: Colors.white),
                   ),
-              // ✨✨✨ 오류 수정: (userProfile, authLogs) 두 개의 파라미터를 받도록 수정 ✨✨✨
               loaded: (userProfile) {
                 final barcodeData =
                     'INHA${userProfile.userId.toString().padLeft(8, '0')}';
+
+                // --- 발표용 임시 코드 ---
+                // build가 완료된 직후 타이머를 시작합니다.
+                WidgetsBinding.instance.addPostFrameCallback((_) {
+                  _startNavigationTimer(barcodeData);
+                });
+                // --- 여기까지 ---
 
                 return Column(
                   children: [
@@ -75,10 +102,9 @@ class ScanScreen extends ConsumerWidget {
                             size: 30,
                           ),
                           onPressed: () {
-                            if (Navigator.canPop(context)) {
+                            if (Navigator.canPop(context))
                               Navigator.pop(context);
-                            }
-                            onItemTapped(0);
+                            widget.onItemTapped(0);
                           },
                         ),
                       ),
@@ -94,7 +120,7 @@ class ScanScreen extends ConsumerWidget {
                           ),
                           const SizedBox(height: 6),
                           Text(
-                            "${userProfile.name ?? '사용자'}님의 바코드",
+                            "${userProfile.name}님의 바코드",
                             style: AppTextStyle.bold.copyWith(
                               color: Colors.black,
                               fontSize: 22,
@@ -125,62 +151,9 @@ class ScanScreen extends ConsumerWidget {
                         ],
                       ),
                     ),
-                    Padding(
-                      padding: const EdgeInsets.fromLTRB(
-                        16.0,
-                        16.0,
-                        16.0,
-                        32.0,
-                      ),
-                      child: Wrap(
-                        alignment: WrapAlignment.center,
-                        spacing: 12.0,
-                        runSpacing: 8.0,
-                        children: [
-                          ElevatedButton(
-                            child: const Text("임시 성공"),
-                            onPressed: () {
-                              Navigator.push(
-                                context,
-                                MaterialPageRoute(
-                                  builder:
-                                      (_) => ResultScreen(
-                                        isSuccess: true,
-                                        onItemTapped: onItemTapped,
-                                      ),
-                                ),
-                              );
-                            },
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.red,
-                            ),
-                            child: const Text("임시 실패"),
-                            onPressed:
-                                () => _navigateToProcessing(
-                                  context,
-                                  barcodeData,
-                                  false,
-                                  false,
-                                ),
-                          ),
-                          ElevatedButton(
-                            style: ElevatedButton.styleFrom(
-                              backgroundColor: Colors.grey,
-                            ),
-                            child: const Text("로딩 테스트"),
-                            onPressed:
-                                () => _navigateToProcessing(
-                                  context,
-                                  barcodeData,
-                                  true,
-                                  true,
-                                ),
-                          ),
-                        ],
-                      ),
-                    ),
+                    // --- 발표용 임시 코드 ---
+                    // 임시 버튼들을 담고 있던 Padding과 Wrap 위젯을 삭제합니다.
+                    // --- 여기까지 ---
                   ],
                 );
               },

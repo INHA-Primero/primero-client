@@ -18,7 +18,6 @@ class AuthInterceptor extends Interceptor {
       return handler.next(options);
     }
 
-    // AuthLocalDataSource에서 새로운 방식으로 토큰을 가져옵니다.
     final token = await ref.read(authLocalDataSourceProvider).getToken();
 
     if (token != null) {
@@ -30,10 +29,7 @@ class AuthInterceptor extends Interceptor {
 
   @override
   void onError(DioException err, ErrorInterceptorHandler handler) {
-
-    if (err.response?.statusCode == 401) {
-      // 예: ref.read(authNotifierProvider.notifier).logout();
-    }
+    if (err.response?.statusCode == 401) {}
 
     return handler.next(err);
   }

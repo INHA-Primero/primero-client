@@ -61,7 +61,7 @@ final authLocalDataSourceProvider = Provider<AuthLocalDataSource>((ref) {
 
 final authRemoteDataSourceProvider = Provider<AuthRemoteDataSource>((ref) {
   final dio = ref.watch(dioProvider);
-  return AuthRemoteDataSource(dio, baseUrl: "http://localhost:8080");
+  return AuthRemoteDataSource(dio, baseUrl: "http://35.216.76.60:8080");
 });
 
 // 리포지토리

@@ -6,7 +6,7 @@ import '../models/page_inquiry_response.dart';
 
 part 'inquiry_remote_data_source.g.dart';
 
-@RestApi(baseUrl: "http://localhost:8080")
+@RestApi(baseUrl: "http://35.216.76.60:8080")
 abstract class InquiryRemoteDataSource {
   factory InquiryRemoteDataSource(Dio dio, {String baseUrl}) =
       _InquiryRemoteDataSource;

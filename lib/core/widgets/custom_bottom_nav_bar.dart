@@ -48,18 +48,17 @@ class CustomBottomAppBar extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    // ✨ [UI 수정] Container로 감싸서 위쪽 테두리(구분선) 추가
     return Container(
       decoration: BoxDecoration(
-        color: Colors.white, // 배경색을 흰색으로 지정해야 그림자 위에 선이 잘 보입니다.
+        color: Colors.white,
         border: Border(top: BorderSide(color: Colors.grey[300]!, width: 0.5)),
       ),
       child: BottomAppBar(
         shape: const CircularNotchedRectangle(),
         notchMargin: 8.0,
-        color: Colors.transparent, // Container에서 색상을 관리하므로 투명하게 변경
+        color: Colors.transparent,
         surfaceTintColor: Colors.white,
-        elevation: 0, // Container에서 그림자를 관리할 수 있으므로 0으로 설정
+        elevation: 0,
         padding: EdgeInsets.zero,
         height: 60,
         child: Row(

@@ -35,8 +35,8 @@ class HomeScreen extends ConsumerWidget {
               ),
             ),
         loaded: (userProfile, characterInfo, isWatering) {
-          final level = (characterInfo.exp / 100).floor() + 1;
-          final expPercentage = (characterInfo.exp % 100) / 100.0;
+          final level = (characterInfo.exp / 1000).floor() + 1;
+          final expPercentage = (characterInfo.exp % 1000) / 1000.0;
           final characterImagePath =
               'assets/images/level${(level > 5) ? 5 : level}.png';
           final double treeHeight = (level >= 5) ? 320 : 250;

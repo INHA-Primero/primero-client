@@ -14,7 +14,7 @@ class _AuthRemoteDataSource implements AuthRemoteDataSource {
     this.baseUrl,
     this.errorLogger,
   }) {
-    baseUrl ??= 'http://localhost:8080';
+    baseUrl ??= 'http://35.216.76.60:8080';
   }
 
   final Dio _dio;
